@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>צייר ונחש - חדר פרטי</title>
+<meta name="description" content="משחק ציור וניחוש בעברית, חדר פרטי אחד. השחקן הראשון שנכנס הוא המנהל." />
+<meta name="theme-color" content="#0d0e24" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" type="image/png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="צייר ונחש" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800;900&subset=hebrew&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="toast" class="toast hidden"></div>
+<div id="reactions-layer"></div>
+<div id="rotate-hint">
+  <span>📱↻ מומלץ לסובב את המכשיר לרוחב לחוויית ציור נוחה יותר</span>
+  <button id="rotate-hint-close" type="button" aria-label="סגור">✕</button>
+</div>
+
+<!-- מסך כניסה -->
+<section id="screen-join" class="screen hidden">
+  <div class="card join-card">
+    <h1 id="brand-title"><span class="brand-emoji">🎨</span> צייר ונחש</h1>
+    <p class="subtitle">חדר פרטי אחד לכולם. מי שנכנס ראשון - מנהל/ת החדר.</p>
+
+    <div id="avatar-preview" class="avatar-preview"></div>
+
+    <div class="avatar-picker-row">
+      <button type="button" id="eyes-prev" class="tool-btn arrow-btn" aria-label="עיניים קודמות">◀</button>
+      <span class="avatar-picker-label">👀 עיניים</span>
+      <button type="button" id="eyes-next" class="tool-btn arrow-btn" aria-label="עיניים הבאות">▶</button>
+    </div>
+    <div class="avatar-picker-row">
+      <button type="button" id="mouth-prev" class="tool-btn arrow-btn" aria-label="פה קודם">◀</button>
+      <span class="avatar-picker-label">👄 פה</span>
+      <button type="button" id="mouth-next" class="tool-btn arrow-btn" aria-label="פה הבא">▶</button>
+    </div>
+
+    <label class="checkbox-label" id="can-read-row">
+      <input type="checkbox" id="can-read-toggle" checked />
+      📖 יודע/ת לקרוא? (אם לא מסומן - מילים יוצגו כתמונה במקום טקסט)
+    </label>
+
+    <label>בחר/י צבע</label>
+    <div id="color-picker" class="color-picker"></div>
+
+    <label for="name-input">איך קוראים לך?</label>
+    <input id="name-input" maxlength="18" placeholder="השם שלך" autocomplete="off" />
+
+    <button id="play-btn" class="btn btn-primary btn-lg">▶ שחקו עכשיו</button>
+
+    <div class="join-options-row">
+      <button type="button" id="show-join-code-btn" class="btn btn-secondary">🔑 הצטרפות עם קוד</button>
+      <button type="button" id="create-room-btn" class="btn btn-secondary">🔒 צור/י חדר פרטי</button>
+    </div>
+
+    <div id="join-code-panel" class="join-code-panel hidden">
+      <input id="join-code-input" maxlength="5" placeholder="קוד החדר" autocomplete="off" />
+      <button type="button" id="submit-join-code-btn" class="btn btn-primary">הצטרפ/י</button>
+    </div>
+
+    <p id="join-error" class="error hidden"></p>
+
+    <p class="fine-print">אין צורך בהרשמה. הדמות והשם שלך יישמרו במכשיר הזה לפעם הבאה.</p>
+  </div>
+</section>
+
+<!-- מסך ראשי (לובי / משחק / סיום) -->
+<section id="screen-main" class="screen hidden">
+
+  <header id="top-bar">
+    <div id="brand">🎨 צייר ונחש</div>
+    <div id="round-info" class="hidden"></div>
+    <div id="timer" class="hidden">--</div>
+    <button id="install-btn" class="btn btn-secondary hidden">📲 התקן אפליקציה</button>
+  </header>
+
+  <div id="layout">
+    <aside id="sidebar-players">
+      <h2>שחקנים <span id="player-count"></span></h2>
+      <ul id="player-list"></ul>
+    </aside>
+
+    <main id="board-area">
+
+      <!-- לובי + הגדרות -->
+      <div id="lobby-panel" class="panel hidden">
+        <div class="lobby-scroll">
+          <h2>הגדרות חדר</h2>
+          <p id="lobby-role-hint" class="hint"></p>
+
+          <div id="room-code-chip" class="room-code-chip hidden">
+            <span>קוד חדר פרטי: <strong id="room-code-value"></strong></span>
+            <button type="button" id="share-code-btn" class="tool-btn" title="שיתוף">📤</button>
+            <button type="button" id="copy-code-btn" class="tool-btn" title="העתקה">📋</button>
+          </div>
+
+          <div class="settings-grid">
+            <div class="setting">
+              <label>מספר סבבים <span class="val" id="val-rounds"></span></label>
+              <input type="range" id="set-rounds" min="1" max="10" step="1" />
+            </div>
+            <div class="setting">
+              <label>זמן לציור (שניות) <span class="val" id="val-drawTime"></span></label>
+              <input type="range" id="set-drawTime" min="30" max="240" step="10" />
+            </div>
+            <div class="setting">
+              <label>מספר מילים לבחירה <span class="val" id="val-wordCount"></span></label>
+              <input type="range" id="set-wordCount" min="1" max="4" step="1" />
+            </div>
+            <div class="setting">
+              <label>מספר רמזים <span class="val" id="val-hints"></span></label>
+              <input type="range" id="set-hints" min="0" max="6" step="1" />
+            </div>
+            <div class="setting">
+              <label>מקסימום שחקנים <span class="val" id="val-maxPlayers"></span></label>
+              <input type="range" id="set-maxPlayers" min="2" max="24" step="1" />
+            </div>
+          </div>
+
+          <div class="setting setting-wide">
+            <label for="set-customWords">מילים מותאמות אישית (מופרדות בפסיקים)</label>
+            <textarea id="set-customWords" rows="3" placeholder="לדוגמה: פיצה, חללית, ליצן"></textarea>
+            <label class="checkbox-label">
+              <input type="checkbox" id="set-useCustomOnly" />
+              להשתמש רק במילים המותאמות אישית (בלי בנק המילים הרגיל)
+            </label>
+          </div>
+        </div>
+
+        <button id="save-settings-btn" class="btn btn-secondary hidden">💾 שמור הגדרות</button>
+        <button id="start-btn" class="btn btn-primary btn-lg hidden">🚀 התחילו משחק</button>
+        <p id="need-players-hint" class="hint"></p>
+      </div>
+
+      <!-- מסך משחק -->
+      <div id="game-panel" class="panel hidden">
+        <div id="word-display"></div>
+
+        <div id="canvas-stage">
+          <div id="canvas-wrap">
+            <canvas id="draw-canvas"></canvas>
+
+            <div id="choosing-overlay" class="overlay hidden">
+              <div class="overlay-card">
+                <p id="choosing-title"></p>
+                <div id="word-choice-buttons"></div>
+                <div id="choose-timer"></div>
+              </div>
+            </div>
+
+            <div id="reveal-overlay" class="overlay hidden">
+              <div class="overlay-card">
+                <p id="reveal-text"></p>
+                <ul id="reveal-scores"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="toolbar" class="hidden">
+          <button id="tool-brush" class="tool-btn active" title="מברשת">🖌️</button>
+          <button id="tool-fill" class="tool-btn" title="דלי צבע">🪣</button>
+          <button id="tool-eraser" class="tool-btn" title="מחק">🧹</button>
+
+          <div class="popover-wrap">
+            <button id="tool-color" class="tool-btn" title="צבע" aria-haspopup="true" aria-expanded="false">
+              <span id="color-btn-swatch" class="color-btn-swatch"></span>
+            </button>
+            <div id="color-popover" class="popover hidden"></div>
+          </div>
+
+          <div class="popover-wrap">
+            <button id="tool-size" class="tool-btn" title="עובי מברשת" aria-haspopup="true" aria-expanded="false">
+              <span id="size-btn-dot" class="size-dot"></span>
+            </button>
+            <div id="size-popover" class="popover hidden">
+              <button type="button" class="size-option" data-size="3"><span class="size-dot" style="width:3px;height:3px"></span></button>
+              <button type="button" class="size-option" data-size="6"><span class="size-dot" style="width:6px;height:6px"></span></button>
+              <button type="button" class="size-option" data-size="12"><span class="size-dot" style="width:12px;height:12px"></span></button>
+              <button type="button" class="size-option" data-size="24"><span class="size-dot" style="width:24px;height:24px"></span></button>
+            </div>
+          </div>
+
+          <button id="tool-undo" class="tool-btn" title="בטל">↩️</button>
+          <button id="tool-clear" class="tool-btn" title="נקה הכל">🗑️</button>
+        </div>
+
+        <div id="reactions-bar">
+          <button class="reaction-btn" data-emoji="😂">😂</button>
+          <button class="reaction-btn" data-emoji="👍">👍</button>
+          <button class="reaction-btn" data-emoji="😮">😮</button>
+          <button class="reaction-btn" data-emoji="❤️">❤️</button>
+          <button class="reaction-btn" data-emoji="🎉">🎉</button>
+          <button class="reaction-btn" data-emoji="🤔">🤔</button>
+        </div>
+      </div>
+
+      <!-- מסך סיום -->
+      <div id="end-panel" class="panel hidden">
+        <div class="end-scroll">
+          <h2>🏁 המשחק נגמר!</h2>
+          <ol id="podium"></ol>
+        </div>
+        <button id="play-again-btn" class="btn btn-primary btn-lg hidden">🔁 שחקו שוב</button>
+        <p id="end-hint" class="hint"></p>
+      </div>
+
+    </main>
+
+    <aside id="sidebar-chat">
+      <div id="chat-messages"></div>
+      <form id="chat-form">
+        <input id="chat-input" maxlength="200" placeholder="כתבו ניחוש..." autocomplete="off" />
+        <button type="button" id="mic-btn" class="tool-btn hidden" title="ניחוש בקול" aria-label="ניחוש בקול">🎤</button>
+        <button type="submit" class="btn btn-primary">שלח</button>
+      </form>
+    </aside>
+  </div>
+</section>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/avatar.js"></script>
+<script src="js/canvas.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

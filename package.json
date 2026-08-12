@@ -1,0 +1,25 @@
+{
+  "name": "tsayer-venachesh",
+  "version": "1.0.0",
+  "description": "משחק ציור וניחוש בעברית בהשראת Scribble - חדר יחיד פרטי, מנהל דינמי, PWA",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "icons": "node scripts/generate-icons.js",
+    "fetch-word-images": "node scripts/fetch-word-images.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "mongodb": "^6.7.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
