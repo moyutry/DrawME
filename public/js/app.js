@@ -151,13 +151,13 @@
   function doJoin(roomCode) {
     const name = saveProfile();
     el("join-error").classList.add("hidden");
-    socket.emit("join", { name, avatar: avatarConfig, token: myToken, roomCode });
+    socket.emit("join", { name, avatar: avatarConfig, token: myToken, roomCode, canRead });
   }
 
   function doCreateRoom() {
     const name = saveProfile();
     el("join-error").classList.add("hidden");
-    socket.emit("create-room", { name, avatar: avatarConfig, token: myToken });
+    socket.emit("create-room", { name, avatar: avatarConfig, token: myToken, canRead });
   }
 
   el("play-btn").addEventListener("click", () => doJoin(undefined));
@@ -214,13 +214,62 @@
 
   socket.on("close-guess", () => showToast("קרוב מאוד! 🔥"));
 
-  // ---------- חיבור מחדש: שקט וללא באנר - ניתוק/חיבור מחדש קורים ברקע בלי הודעה נראית ----------
+  // ---------- חיבור מחדש: ניתוק קצר (רקע/נעילת מסך) לא מוצג, אבל אם זה נמשך
+  // יותר משנייה וחצי מציגים באנר ברור שהאפליקציה במצב "לא מחובר" - כדי שלא
+  // ייראה כאילו הכל תקין בזמן שהיא בעצם לא מדברת עם השרת. ----------
+
+  const disconnectedOverlay = el("disconnected-overlay");
+  const disconnectedText = el("disconnected-text");
+  let disconnectedBannerTimer = null;
+
+  function showDisconnectedBanner(text) {
+    disconnectedText.textContent = text || "מנסים להתחבר מחדש...";
+    disconnectedOverlay.classList.remove("hidden");
+  }
+
+  function hideDisconnectedBanner() {
+    clearTimeout(disconnectedBannerTimer);
+    disconnectedBannerTimer = null;
+    disconnectedOverlay.classList.add("hidden");
+  }
+
+  socket.on("disconnect", () => {
+    clearTimeout(disconnectedBannerTimer);
+    disconnectedBannerTimer = setTimeout(() => showDisconnectedBanner(), 1500);
+  });
+
+  socket.on("connect", hideDisconnectedBanner);
+
+  socket.io.on("reconnect_attempt", () => {
+    if (!disconnectedOverlay.classList.contains("hidden")) {
+      disconnectedText.textContent = "מנסים להתחבר מחדש...";
+    }
+  });
+
+  socket.io.on("reconnect_failed", () => {
+    showDisconnectedBanner("לא הצלחנו להתחבר מחדש. בדקו את החיבור לאינטרנט ונסו שוב.");
+  });
+
+  el("reconnect-btn").addEventListener("click", () => {
+    disconnectedText.textContent = "מתחברים מחדש...";
+    if (socket.connected) {
+      location.reload();
+    } else {
+      socket.connect();
+    }
+  });
 
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") socket.emit("rejoin", { token: myToken, roomCode: myRoomCode });
+    if (document.visibilityState === "visible") {
+      if (!socket.connected) socket.connect();
+      socket.emit("rejoin", { token: myToken, roomCode: myRoomCode });
+    }
   });
   window.addEventListener("pageshow", (e) => {
-    if (e.persisted) socket.emit("rejoin", { token: myToken, roomCode: myRoomCode });
+    if (e.persisted) {
+      if (!socket.connected) socket.connect();
+      socket.emit("rejoin", { token: myToken, roomCode: myRoomCode });
+    }
   });
 
   // ---------- כלי ציור: מברשת/דלי/מחק, צבע ועובי (כפתור + פופאובר) ----------

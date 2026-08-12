@@ -369,6 +369,29 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
   color: var(--ink);
 }
 
+.page-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(6, 7, 20, 0.75);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.page-overlay .overlay-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  margin: 0 0 6px;
+}
+
+.page-overlay .overlay-card button {
+  margin-top: 14px;
+}
+
 .toast {
   position: fixed;
   top: 14px;

@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS = {
 };
 
 const CHOOSE_TIME = 15; // שניות לבחירת מילה
+const CHOOSE_TIME_IMAGES = 45; // שניות לבחירת מילה כשהצייר/ת בוחר/ת לפי תמונות (לא קורא/ת)
 const REVEAL_TIME = 6; // שניות הפסקה בין תורות
 const MIN_PLAYERS_TO_START = 2;
 const GRACE_PERIOD_MS = 10000; // חלון חסד לניתוק (רקע/נעילת מסך/רשת רגעית) לפני הסרה סופית
@@ -132,7 +133,7 @@ class Room {
     return [...this.players.values()].filter((p) => p.connected);
   }
 
-  addPlayer(socketId, name, avatar, token) {
+  addPlayer(socketId, name, avatar, token, canRead) {
     const isFirst = this.players.size === 0;
     if (isFirst) {
       // חדר ריק לגמרי -> מאפסים משחק פעיל קודם, ההגדרות נשארות.
@@ -151,6 +152,7 @@ class Room {
       guessedCorrect: false,
       joinedMidGame: this.phase !== "lobby" && this.phase !== "ended",
       avatar: { eyes: avatar.eyes, mouth: avatar.mouth },
+      canRead: canRead !== false,
     };
     this.players.set(socketId, player);
     return player;
@@ -269,7 +271,7 @@ class Room {
   // החסד. זה מונע לחלוטין את המצב של "אותו שחקן/ית מופיע/ה פעמיים" - כל
   // ניסיון join עם טוקן קיים ממזג לתוך המושב הישן במקום ליצור שחקן/ית חדש/ה.
   // מחזיר את השחקן/ית המעודכן/ת, או null אם אין התאמה (הקורא/ת ימשיך ב-addPlayer רגיל).
-  takeOverByToken(io, socketId, name, avatar, token) {
+  takeOverByToken(io, socketId, name, avatar, token, canRead) {
     const found = this.findPlayerByToken(token);
     if (!found) return null;
     const [oldId, player] = found;
@@ -288,6 +290,7 @@ class Room {
     player.name = name;
     player.color = avatar.color;
     player.avatar = { eyes: avatar.eyes, mouth: avatar.mouth };
+    player.canRead = canRead !== false;
     if (this.currentDrawerId === socketId) this.resumeTurnAfterDrawerReconnect();
     return player;
   }
@@ -413,7 +416,8 @@ class Room {
     this.turnPoints = new Map();
     this.players.forEach((p) => (p.guessedCorrect = false));
     this.phase = "choosing";
-    this.chooseEndsAt = Date.now() + CHOOSE_TIME * 1000;
+    const chooseTime = this.players.get(drawerId)?.canRead === false ? CHOOSE_TIME_IMAGES : CHOOSE_TIME;
+    this.chooseEndsAt = Date.now() + chooseTime * 1000;
 
     this.broadcastState();
     this.emitToPlayer(drawerId, "word-choices", { choices: this.wordChoices, endsAt: this.chooseEndsAt });
@@ -422,7 +426,7 @@ class Room {
       if (this.phase === "choosing") {
         this.chooseWord(drawerId, this.wordChoices[0]);
       }
-    }, CHOOSE_TIME * 1000 + 500);
+    }, chooseTime * 1000 + 500);
   }
 
   chooseWord(socketId, word) {

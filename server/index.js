@@ -60,14 +60,15 @@ async function main() {
   io.on("connection", (socket) => {
     const currentRoom = () => roomManager.get(socket.data.roomCode);
 
-    function enterRoom(room, name, avatar, token) {
+    function enterRoom(room, name, avatar, token, canRead) {
       name = String(name || "שחקן").trim().slice(0, 18) || "שחקן";
       const avatarObj = buildAvatar(avatar);
+      canRead = canRead !== false;
 
       // קודם מנסים למזג לתוך מושב קיים לפי הטוקן (אם יש) - כך שאם החיבור
       // הקודם עדיין לא זוהה כמנותק בצד השרת (למשל אפליקציה שנסגרה לגמרי
       // והתחברות מחדש קרתה לפני שה-timeout הבשיל), לא נוצר שחקן/ית כפול/ה.
-      const takenOver = room.takeOverByToken(io, socket.id, name, avatarObj, token);
+      const takenOver = room.takeOverByToken(io, socket.id, name, avatarObj, token, canRead);
       if (!takenOver) {
         if (room.connectedPlayers().length >= room.settings.maxPlayers) {
           socket.emit("join-error", {
@@ -77,7 +78,7 @@ async function main() {
           });
           return;
         }
-        room.addPlayer(socket.id, name, avatarObj, token);
+        room.addPlayer(socket.id, name, avatarObj, token, canRead);
       }
       socket.data.roomCode = room.code;
       socket.join(room.code);
@@ -85,7 +86,7 @@ async function main() {
       room.broadcastState();
     }
 
-    socket.on("join", ({ name, avatar, token, roomCode }) => {
+    socket.on("join", ({ name, avatar, token, roomCode, canRead }) => {
       if (currentRoom() && currentRoom().players.has(socket.id)) return;
       let room;
       if (roomCode) {
@@ -97,12 +98,12 @@ async function main() {
       } else {
         room = roomManager.get(GENERAL_CODE);
       }
-      enterRoom(room, name, avatar, token);
+      enterRoom(room, name, avatar, token, canRead);
     });
 
-    socket.on("create-room", ({ name, avatar, token }) => {
+    socket.on("create-room", ({ name, avatar, token, canRead }) => {
       const room = roomManager.createPrivateRoom();
-      enterRoom(room, name, avatar, token);
+      enterRoom(room, name, avatar, token, canRead);
     });
 
     socket.on("rejoin", ({ token, roomCode }) => {
