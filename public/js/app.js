@@ -501,6 +501,7 @@
   });
   el("set-customWords").addEventListener("input", () => (formTouched = true));
   el("set-useCustomOnly").addEventListener("change", () => (formTouched = true));
+  el("set-catchUpBonus").addEventListener("change", () => (formTouched = true));
 
   el("save-settings-btn").addEventListener("click", () => {
     const patch = {};
@@ -510,6 +511,7 @@
       .map((w) => w.trim())
       .filter(Boolean);
     patch.useCustomWordsOnly = el("set-useCustomOnly").checked;
+    patch.catchUpBonus = el("set-catchUpBonus").checked;
     socket.emit("update-settings", patch);
     formTouched = false;
   });
@@ -543,6 +545,7 @@
     });
     el("set-customWords").value = settings.customWords.join(", ");
     el("set-useCustomOnly").checked = settings.useCustomWordsOnly;
+    el("set-catchUpBonus").checked = settings.catchUpBonus;
   }
 
   // ---------- צ'אט ----------
@@ -669,10 +672,16 @@
     }
   }
 
+  // רשימת השחקנים המלאה (כולל p.isHost/p.winStreak/וכו') נשמרת בצד - כדי
+  // שחלון הפרטים (openPlayerDetail) יוכל להיפתח עם המידע העדכני גם בלי
+  // להעביר את זה דרך ה-DOM.
+  let lastPlayersById = new Map();
+
   function renderPlayers(state) {
     el("player-count").textContent = `(${state.players.length})`;
     const list = el("player-list");
     list.innerHTML = "";
+    lastPlayersById = new Map(state.players.map((p) => [p.id, p]));
     state.players.forEach((p, i) => {
       const li = document.createElement("li");
       li.className = "player-row" +
@@ -680,6 +689,7 @@
         (p.isDrawing ? " drawing" : "") +
         (p.guessedCorrect ? " guessed" : "") +
         (i === 0 && p.score > 0 ? " top-rank" : "");
+      li.addEventListener("click", () => openPlayerDetail(p.id));
 
       const avatarSlot = document.createElement("span");
       avatarSlot.className = "player-avatar";
@@ -695,49 +705,55 @@
 
       li.appendChild(avatarSlot);
       li.appendChild(name);
-      if (p.isHost) {
-        const badge = document.createElement("span");
-        badge.className = "player-badge";
-        badge.title = "מנהל/ת החדר";
-        badge.textContent = "👑";
-        li.appendChild(badge);
-      }
-      if (p.isDrawing) {
-        const badge = document.createElement("span");
-        badge.className = "player-badge";
-        badge.title = "מצייר/ת עכשיו";
-        badge.textContent = "✏️";
-        li.appendChild(badge);
-      }
-      if (p.guessedCorrect) {
-        const badge = document.createElement("span");
-        badge.className = "player-badge";
-        badge.textContent = "✅";
-        li.appendChild(badge);
-      }
-      if (p.winStreak >= 2) {
-        const streak = document.createElement("span");
-        streak.className = "streak-chip";
-        streak.title = `${p.winStreak} ניחושים נכונים ברצף`;
-        streak.textContent = `🔥${p.winStreak}`;
-        li.appendChild(streak);
-      }
       li.appendChild(score);
-
-      if (state.you && state.you.isHost && p.id !== myId) {
-        const kickBtn = document.createElement("button");
-        kickBtn.className = "kick-btn";
-        kickBtn.textContent = "✕";
-        kickBtn.title = "הסר שחקן";
-        kickBtn.addEventListener("click", () => {
-          if (confirm(`להסיר את ${p.name} מהחדר?`)) socket.emit("kick", { playerId: p.id });
-        });
-        li.appendChild(kickBtn);
-      }
 
       list.appendChild(li);
     });
   }
+
+  // ---------- חלון פרטי שחקן/ית (נפתח בלחיצה על שורה ברשימה) ----------
+
+  function openPlayerDetail(playerId) {
+    const p = lastPlayersById.get(playerId);
+    if (!p) return;
+
+    Avatar.renderAvatar(el("player-detail-avatar"), p.avatar, 100);
+    el("player-detail-name").textContent = p.name;
+    el("player-detail-score").textContent = `🏆 ${p.score} נקודות`;
+
+    const badges = el("player-detail-badges");
+    badges.innerHTML = "";
+    const chips = [];
+    if (p.isHost) chips.push("👑 מנהל/ת החדר");
+    if (p.isDrawing) chips.push("✏️ מצייר/ת עכשיו");
+    if (p.guessedCorrect) chips.push("✅ ניחש/ה נכון הסבב הזה");
+    if (p.winStreak >= 2) chips.push(`🔥 רצף של ${p.winStreak}`);
+    if (!p.connected) chips.push("📡 מנותק/ת זמנית");
+    chips.forEach((text) => {
+      const span = document.createElement("span");
+      span.textContent = text;
+      badges.appendChild(span);
+    });
+
+    const kickBtn = el("player-detail-kick-btn");
+    const canKick = lastState && lastState.you && lastState.you.isHost && p.id !== myId;
+    kickBtn.classList.toggle("hidden", !canKick);
+    kickBtn.onclick = canKick
+      ? () => {
+          showConfirmPopover(kickBtn, `להסיר את ${p.name} מהחדר?`, () => {
+            socket.emit("kick", { playerId: p.id });
+            el("player-detail-modal").classList.add("hidden");
+          });
+        }
+      : null;
+
+    el("player-detail-modal").classList.remove("hidden");
+  }
+
+  el("player-detail-close").addEventListener("click", () => el("player-detail-modal").classList.add("hidden"));
+  el("player-detail-modal").addEventListener("click", (e) => {
+    if (e.target.id === "player-detail-modal") el("player-detail-modal").classList.add("hidden");
+  });
 
   function renderTopBar(state) {
     const roundInfo = el("round-info");
@@ -782,6 +798,7 @@
     SETTING_FIELDS.forEach((key) => (el("set-" + key).disabled = !iAmHost));
     el("set-customWords").disabled = !iAmHost;
     el("set-useCustomOnly").disabled = !iAmHost;
+    el("set-catchUpBonus").disabled = !iAmHost;
     el("save-settings-btn").classList.toggle("hidden", !iAmHost);
     el("start-btn").classList.toggle("hidden", !iAmHost);
 
@@ -953,13 +970,13 @@
       const li = document.createElement("li");
       li.className = `podium-place place-${i + 1}`;
 
-      const avatarSlot = document.createElement("span");
-      avatarSlot.className = "player-avatar";
-      Avatar.renderAvatar(avatarSlot, p.avatar, i === 0 ? 58 : 44);
-
       const medal = document.createElement("span");
       medal.className = "podium-medal";
       medal.textContent = medals[i];
+
+      const avatarSlot = document.createElement("span");
+      avatarSlot.className = "podium-avatar";
+      Avatar.renderAvatar(avatarSlot, p.avatar, i === 0 ? 76 : 58);
 
       const name = document.createElement("span");
       name.className = "podium-name";
@@ -969,8 +986,8 @@
       score.className = "podium-score";
       score.textContent = p.score;
 
-      li.appendChild(avatarSlot);
       li.appendChild(medal);
+      li.appendChild(avatarSlot);
       li.appendChild(name);
       li.appendChild(score);
       podium.appendChild(li);
@@ -1126,6 +1143,17 @@
     localStorage.setItem("tvn-sound", soundOn ? "on" : "off");
     updateSoundToggleUI();
     if (soundOn) playTone([523.25]); // משוב מיידי שהצליל חזר לפעול
+  });
+
+  // ---------- עזיבת חדר ----------
+
+  el("leave-room-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    showConfirmPopover(el("leave-room-btn"), "לצאת מהחדר ולחזור למסך הכניסה?", () => {
+      socket.emit("leave-room");
+      localStorage.removeItem("tvn-room");
+      setTimeout(() => location.reload(), 150);
+    });
   });
 
   // ---------- כלי עזר ----------

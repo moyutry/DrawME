@@ -186,6 +186,17 @@ async function main() {
       }
     });
 
+    // עזיבה יזומה של השחקן/ית עצמו/ה (כפתור "עזוב/י חדר") - מנקה מיד, בלי
+    // לחכות לחלון החסד הרגיל של ניתוק (הסוקט עצמו נשאר מחובר, ה-Client
+    // טוען מחדש בעצמו כדי לחזור נקי למסך הכניסה).
+    socket.on("leave-room", () => {
+      const room = currentRoom();
+      if (!room) return;
+      room.leaveRoom(socket.id);
+      socket.leave(room.code);
+      socket.data.roomCode = null;
+    });
+
     socket.on("disconnect", () => {
       const room = currentRoom();
       if (!room) return;

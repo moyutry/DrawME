@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS = {
   maxPlayers: 12,
   customWords: [],
   useCustomWordsOnly: false,
+  catchUpBonus: false,
 };
 
 const CHOOSE_TIME = 15; // שניות לבחירת מילה
@@ -142,22 +143,37 @@ class Room {
       // חדר ריק לגמרי -> מאפסים משחק פעיל קודם, ההגדרות נשארות.
       this.resetGameState();
     }
+    const joinedMidGame = this.phase !== "lobby" && this.phase !== "ended";
+
+    // "מצב דביקה" (הגדרה אופציונלית): מי שמצטרף/ת באמצע משחק פעיל מקבל/ת
+    // נקודות פתיחה - ממוצע הניקוד הנוכחי של שאר השחקנים/יות - כדי שלא
+    // יתחיל/תתחיל הכי מאחור. לא רלוונטי בהצטרפות ללובי/אחרי שהמשחק נגמר,
+    // ולא חל על חיבור מחדש (takeOverByToken) - רק על שחקן/ית חדש/ה אמיתי/ת.
+    let startingScore = 0;
+    if (joinedMidGame && this.settings.catchUpBonus) {
+      const scores = this.connectedPlayers().map((p) => p.score);
+      if (scores.length) startingScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    }
+
     const player = {
       id: socketId,
       token: token || null,
       name: name.slice(0, 18),
       color: avatar.color,
-      score: 0,
+      score: startingScore,
       connected: true,
       disconnectedAt: null,
       isHost: isFirst,
       joinOrder: this.joinCounter++,
       guessedCorrect: false,
-      joinedMidGame: this.phase !== "lobby" && this.phase !== "ended",
+      joinedMidGame,
       avatar: { eyes: avatar.eyes, mouth: avatar.mouth, pattern: avatar.pattern },
       canRead: canRead !== false,
     };
     this.players.set(socketId, player);
+    if (startingScore > 0) {
+      this.systemMessage(`🚀 ${player.name} הצטרף/ה באמצע המשחק וקיבל/ה ${startingScore} נקודות פתיחה כדי לא לפגר`);
+    }
     return player;
   }
 
@@ -182,6 +198,15 @@ class Room {
       socketId,
       setTimeout(() => this.finalizeDisconnect(socketId), GRACE_PERIOD_MS)
     );
+  }
+
+  // עזיבה יזומה (כפתור "עזוב/י חדר") - בניגוד לניתוק, אין סיבה לחכות לחלון
+  // החסד: מריצים מיד את אותה לוגיקת "מתנתק/ת" (הקפאת תור אם זה הצייר/ת
+  // הנוכחי/ת וכו') ומדלגים ישר לסיום הסופי בלי להמתין.
+  leaveRoom(socketId) {
+    this.handleDisconnect(socketId);
+    clearTimeout(this.disconnectTimers.get(socketId));
+    this.finalizeDisconnect(socketId);
   }
 
   // מריץ את מה שפעם קרה מיד עם ניתוק (removePlayer הישן) - אבל רק אחרי
@@ -338,6 +363,7 @@ class Room {
     if (patch.useCustomWordsOnly !== undefined) {
       s.useCustomWordsOnly = Boolean(patch.useCustomWordsOnly) && s.customWords.length > 0;
     }
+    if (patch.catchUpBonus !== undefined) s.catchUpBonus = Boolean(patch.catchUpBonus);
     this.settings = s;
     if (this.persistent) await db.saveSettings(s);
     return { ok: true };

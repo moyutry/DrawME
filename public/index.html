@@ -84,6 +84,18 @@
   </div>
 </div>
 
+<!-- חלון פרטי שחקן/ית - נפתח בלחיצה על שורה ברשימת השחקנים -->
+<div id="player-detail-modal" class="page-overlay hidden">
+  <div class="overlay-card player-detail-card">
+    <button type="button" id="player-detail-close" class="modal-close-btn" aria-label="סגור">✕</button>
+    <div id="player-detail-avatar" class="player-detail-avatar"></div>
+    <p id="player-detail-name" class="player-detail-name"></p>
+    <div id="player-detail-badges" class="player-detail-badges"></div>
+    <p id="player-detail-score" class="player-detail-score"></p>
+    <button type="button" id="player-detail-kick-btn" class="btn hidden">🚫 הסר מהחדר</button>
+  </div>
+</div>
+
 <!-- מסך כניסה -->
 <section id="screen-join" class="screen hidden">
   <div class="card join-card">
@@ -103,7 +115,10 @@
       <div id="stats-badges" class="stats-badges hidden"></div>
     </div>
 
-    <div id="avatar-preview" class="avatar-preview"></div>
+    <div class="avatar-preview-wrap">
+      <div id="avatar-preview" class="avatar-preview"></div>
+      <button type="button" id="randomize-avatar-btn" class="btn btn-secondary" title="הפתעה - דמות אקראית" aria-label="הפתעה - דמות אקראית">🎲</button>
+    </div>
 
     <div class="avatar-picker-row">
       <button type="button" id="eyes-prev" class="tool-btn arrow-btn" aria-label="עיניים קודמות">◀</button>
@@ -120,7 +135,6 @@
       <span class="avatar-picker-label">✨ תבנית</span>
       <button type="button" id="pattern-next" class="tool-btn arrow-btn" aria-label="תבנית הבאה">▶</button>
     </div>
-    <button type="button" id="randomize-avatar-btn" class="btn btn-secondary">🎲 הפתעה</button>
 
     <label class="checkbox-label" id="can-read-row">
       <input type="checkbox" id="can-read-toggle" checked />
@@ -155,6 +169,7 @@
 <section id="screen-main" class="screen hidden">
 
   <header id="top-bar">
+    <button type="button" id="leave-room-btn" class="tool-btn" title="עזיבת החדר" aria-label="עזיבת החדר">🚪</button>
     <div id="brand">🎨 צייר ונחש</div>
     <div id="round-info" class="hidden"></div>
     <div id="timer" class="hidden">--</div>
@@ -213,6 +228,14 @@
             <label class="checkbox-label">
               <input type="checkbox" id="set-useCustomOnly" />
               להשתמש רק במילים המותאמות אישית (בלי בנק המילים הרגיל)
+            </label>
+          </div>
+
+          <h3 class="settings-section-title">🚀 מצב דביקה</h3>
+          <div class="setting setting-wide">
+            <label class="checkbox-label">
+              <input type="checkbox" id="set-catchUpBonus" />
+              מי שמצטרף/ת באמצע משחק מקבל/ת נקודות פתיחה כדי לא לפגר אחרי השאר
             </label>
           </div>
         </div>

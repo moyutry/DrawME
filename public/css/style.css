@@ -206,6 +206,8 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
   max-height: calc(100svh - 32px);
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
+  padding: 22px;
 }
 
 #brand-title {
@@ -232,12 +234,15 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
     drop-shadow(0 3px 5px rgba(45, 36, 64, 0.25));
 }
 
-.subtitle { color: var(--text-muted); margin: 0 0 18px; font-size: 0.95rem; font-weight: 600; }
+.subtitle { color: var(--text-muted); margin: 0 0 12px; font-size: 0.95rem; font-weight: 600; }
+
+/* עטיפה יחסית קטנה סביב תצוגת הדמות, כדי שכפתור ה"הפתעה" יוכל לשבת כתג
+   צף בפינה שלה (כמו תג עריכה על תמונת פרופיל) - חוסך שורת כפתור שלמה. */
+.avatar-preview-wrap { position: relative; width: 130px; margin: 4px auto 10px; }
 
 .avatar-preview {
-  width: 150px;
-  height: 150px;
-  margin: 4px auto 14px;
+  width: 130px;
+  height: 130px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -256,21 +261,35 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
   justify-content: center;
 }
 
+#randomize-avatar-btn {
+  position: absolute;
+  bottom: -2px;
+  left: -2px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .avatar-picker-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  margin-bottom: 12px;
+  gap: 14px;
+  margin-bottom: 6px;
 }
 
-.avatar-picker-label { font-weight: 800; min-width: 84px; text-align: center; font-size: 0.95rem; }
+.avatar-picker-label { font-weight: 800; min-width: 78px; text-align: center; font-size: 0.9rem; }
 
 .arrow-btn {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  font-size: 1.1rem;
+  font-size: 1rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -282,7 +301,7 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
   display: block;
   text-align: right;
   font-weight: 700;
-  margin: 14px 0 6px;
+  margin: 8px 0 5px;
   font-size: 0.9rem;
 }
 
@@ -300,11 +319,15 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
   font-weight: 600;
 }
 
+/* רצועת גלילה אופקית במקום גריד עוטף - חוסך שורה-שתיים של גובה מיותר,
+   ותואם את אותה שפה חזותית של רצועת השחקנים (גם היא גוללת אופקית). */
 .color-picker {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: 10px;
-  justify-content: center;
+  padding: 4px 2px;
+  justify-content: flex-start;
 }
 
 .color-swatch {
@@ -312,6 +335,7 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
   height: 44px;
   border-radius: 50%;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .color-swatch.selected {
@@ -333,7 +357,7 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
 
 .error { color: var(--danger); font-weight: 700; margin-top: 10px; }
 
-.fine-print { color: var(--text-muted); font-size: 0.8rem; margin-top: 18px; }
+.fine-print { color: var(--text-muted); font-size: 0.75rem; margin-top: 10px; }
 
 .join-options-row { display: flex; gap: 10px; margin-top: 12px; }
 .join-options-row .btn { flex: 1; padding: 10px 12px; font-size: 0.95rem; }
@@ -430,6 +454,55 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
 
 .ios-share-icon { font-size: 1.1rem; }
 
+/* --- חלון פרטי שחקן/ית --- */
+
+.modal-close-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--surface-tint);
+  border: 2px solid var(--outline);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-detail-card { position: relative; padding-top: 30px; min-width: 220px; }
+
+.player-detail-avatar { display: flex; justify-content: center; margin-bottom: 6px; }
+.player-detail-avatar svg { display: block; }
+
+.player-detail-name { font-size: 1.2rem; font-weight: 900; margin: 0 0 6px; }
+
+.player-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.player-detail-badges span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface-tint);
+  border: 2px solid var(--border-strong);
+  font-weight: 700;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.player-detail-score { font-weight: 900; font-size: 1.3rem; color: var(--primary); margin: 0 0 4px; }
+
+#player-detail-kick-btn { background: var(--accent-red); color: #fff; margin-top: 8px; }
+
 .toast {
   position: fixed;
   top: 14px;
@@ -513,6 +586,8 @@ body.in-game #screen-main {
 #sound-toggle-btn { padding: 6px 10px; font-size: 1.1rem; flex-shrink: 0; }
 #sound-toggle-btn.active { opacity: 0.5; }
 
+#leave-room-btn { padding: 6px 10px; font-size: 1.1rem; flex-shrink: 0; }
+
 /* ---------- פריסה (מובייל-פירסט) ---------- */
 
 #layout {
@@ -595,20 +670,6 @@ body.in-game #board-area { flex: 1; min-height: 0; }
 
 .player-score { font-weight: 800; color: var(--primary); font-size: 0.68rem; }
 
-.player-badge { font-size: 0.8rem; }
-
-.kick-btn {
-  background: none;
-  border: none;
-  color: var(--danger);
-  font-size: 0.95rem;
-  opacity: 0.7;
-  box-shadow: none;
-  padding: 4px;
-}
-.kick-btn:hover { opacity: 1; }
-.kick-btn:active { transform: none; }
-
 #board-area { align-items: stretch; }
 
 .panel { display: flex; flex-direction: column; height: 100%; min-height: 0; }
@@ -621,6 +682,11 @@ body.in-game #board-area { flex: 1; min-height: 0; }
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  /* שומר תמיד מקום קבוע לפס הגלילה (בעברית/RTL הוא בצד שמאל) כדי שהוא
+     לעולם לא "יחתוך"/יכסה תוכן שם (למשל התגית של ה-val ליד מחוונים) -
+     ושהתוכן לא יזוז כשגלילה מתחילה/נגמרת. נתמך בדפדפנים עדכניים; מתעלם
+     בשקט בדפדפנים ישנים יותר (מתנהג כמו קודם, בלי המקום השמור). */
+  scrollbar-gutter: stable;
 }
 
 #lobby-panel .lobby-scroll {
@@ -636,18 +702,20 @@ body.in-game #board-area { flex: 1; min-height: 0; }
 .hint { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
 
 .settings-section-title {
-  margin: 18px 0 6px;
+  margin: 12px 0 6px;
   font-size: 0.95rem;
   font-weight: 800;
   color: var(--primary);
 }
-.settings-section-title:first-of-type { margin-top: 4px; }
+.settings-section-title:first-of-type { margin-top: 2px; }
 
+/* שתיים-שלוש עמודות כבר מהמסך הכי צר (לא הגדרה אחת בשורה) - מצמצם
+   משמעותית את הגובה הכולל, כדי שהלובי ייכנס בלי גלילה ברוב הטלפונים. */
 .settings-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  margin: 10px 0;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px 14px;
+  margin: 8px 0;
 }
 
 .setting label {
@@ -1054,31 +1122,42 @@ input[type="range"]::-moz-range-thumb {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
 }
 
+/* בלוקים בגובה משתנה (1st הכי גבוה, כמו דוכן פרסים אמיתי) - התוכן מעוגן
+   לתחתית כל בלוק כך שכל הדמויות/שמות יושבים על אותו "קו קרקע". */
 .podium-place {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
   gap: 4px;
-  padding: 10px 6px 12px;
-  border-radius: 14px 14px 8px 8px;
+  padding: 12px 6px 14px;
+  border-radius: 16px 16px 6px 6px;
   background: var(--surface-tint);
   border: 3px solid var(--outline);
+  box-shadow: var(--shadow-raised-sm);
   font-weight: 800;
 }
-.podium-place .player-avatar { width: 44px; height: 44px; }
+/* הדמות עצמה בלי טבעת/מסגרת עיגול (שלא תיראה כמו "צ'יפ" קטן) - ה-SVG
+   מוצג כמו שהוא, גדול, ובלי תוספות סביבו. */
+.podium-place .podium-avatar { display: block; line-height: 0; margin-bottom: 2px; }
 .podium-place .podium-name { font-size: 0.85rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .podium-place .podium-score { font-size: 0.8rem; color: var(--text-muted); }
-.podium-place .podium-medal { font-size: 1.6rem; }
+.podium-place .podium-medal { font-size: 1.5rem; margin-bottom: 2px; }
 
-.podium-place.place-1 { order: 2; padding-top: 6px; background: linear-gradient(180deg, rgba(var(--accent-yellow-rgb), 0.35), var(--surface-tint)); border-color: var(--accent-yellow); box-shadow: 0 0 20px rgba(var(--accent-yellow-rgb), 0.4); }
-.podium-place.place-1 .player-avatar { width: 58px; height: 58px; }
-.podium-place.place-2 { order: 1; }
-.podium-place.place-3 { order: 3; }
+.podium-place.place-1 {
+  order: 2;
+  min-height: 200px;
+  background: linear-gradient(180deg, rgba(var(--accent-yellow-rgb), 0.4), var(--surface-tint) 65%);
+  border-color: var(--accent-yellow);
+  box-shadow: 0 0 22px rgba(var(--accent-yellow-rgb), 0.45);
+}
+.podium-place.place-2 { order: 1; min-height: 158px; }
+.podium-place.place-3 { order: 3; min-height: 130px; }
 
 /* שאר הדירוגים (מ-4 ומטה, אם יש) - שורה רגילה מתחת לפודיום */
 #podium-rest { list-style: none; padding: 0; width: min(440px, 92vw); margin: 10px auto 0; }
@@ -1144,22 +1223,6 @@ input[type="range"]::-moz-range-thumb {
 #chat-form #mic-btn { border-radius: 50%; width: 38px; height: 38px; padding: 0; flex-shrink: 0; }
 #chat-form button[type="submit"] { border-radius: 999px; flex-shrink: 0; }
 
-/* --- תגי הישג / רצף ניצחונות / MVP --- */
-
-.streak-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--accent-orange);
-  color: #fff;
-  border: 2px solid var(--outline);
-  font-weight: 800;
-  font-size: 0.78rem;
-  white-space: nowrap;
-}
-
 /* --- כרטיס "הסטטיסטיקות שלי" (מסך כניסה) --- */
 
 .stats-card {
@@ -1167,8 +1230,8 @@ input[type="range"]::-moz-range-thumb {
   justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin: 0 0 16px;
-  padding: 10px 12px;
+  margin: 0 0 10px;
+  padding: 8px 12px;
   border-radius: 14px;
   background: var(--surface-tint);
   border: 2px solid var(--border-strong);
@@ -1198,7 +1261,10 @@ input[type="range"]::-moz-range-thumb {
 
 .confirm-popover {
   position: fixed;
-  z-index: 300;
+  /* גבוה יותר מ-.page-overlay/#rotate-overlay (1000/1100) - כי הפופאובר
+     הזה יכול להיפתח גם מתוך חלון פרטי השחקן/ית (למשל אישור הסרה), ואז
+     הוא חייב לשבת מעל אותו חלון ולא מתחתיו. */
+  z-index: 1200;
   background: var(--surface);
   border: 3px solid var(--accent-red);
   border-radius: 14px;
@@ -1220,7 +1286,6 @@ input[type="range"]::-moz-range-thumb {
   .player-name { max-width: none; font-size: 0.9rem; }
   .player-score { font-size: 0.85rem; }
   #sidebar-chat { max-height: none; }
-  .settings-grid { grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); }
 
   /* בזמן משחק בפועל ברוחב הזה, #layout עדיין עמודת flex (לא grid, זה קורה
      רק מ-900px) - בלי תקרת גובה, רשימת שחקנים ארוכה/היסטוריית צ'אט ארוכה
@@ -1310,9 +1375,6 @@ input[type="range"]::-moz-range-thumb {
   .player-avatar svg { width: 26px; height: 26px; display: block; }
   .player-name { max-width: 72px; font-size: 0.76rem; }
   .player-score { font-size: 0.72rem; }
-  .player-badge { font-size: 0.72rem; }
-  .streak-chip { font-size: 0.68rem; padding: 1px 7px; }
-  .kick-btn { display: none; }
 
   /* --- צ'אט: פס קבוע קטן, לא נגלל/מתקפל --- */
   #sidebar-chat {
@@ -1340,11 +1402,12 @@ input[type="range"]::-moz-range-thumb {
   }
   body.in-game #install-btn { display: none !important; }
   /* הלוגו יורד בזמן משחק בפועל בטלפון צר - כדי לפנות מקום לסרגל ה-טופ-בר
-     (מידע-סבב + טיימר + כפתור השתקה) בלי גלישה/שבירת שורה, גם ב-320px. */
+     (יציאה + מידע-סבב + טיימר + כפתור השתקה) בלי גלישה/שבירת שורה, גם ב-320px. */
   body.in-game #brand { display: none; }
   body.in-game #round-info { font-size: 0.78rem; }
   body.in-game #timer { font-size: 0.9rem; padding: 2px 12px; }
-  body.in-game #sound-toggle-btn { padding: 4px 8px; font-size: 1rem; }
+  body.in-game #sound-toggle-btn,
+  body.in-game #leave-room-btn { padding: 4px 8px; font-size: 1rem; }
 
   body.in-game #board-area {
     padding: 0;
