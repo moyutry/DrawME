@@ -370,7 +370,12 @@ class Room {
     if (this.turnIndex === -1 || this.turnIndex >= this.drawOrder.length) {
       this.round++;
       this.turnIndex = 0;
-      this.drawOrder = shuffle(this.connectedPlayers().map((p) => p.id));
+      // סדר תורות קבוע לפי סדר ההצטרפות לחדר - לא מוגרל מחדש כל סבב, כדי
+      // שכל שחקן/ית ידע/תדע בדיוק מתי תורו/ה יגיע (בלי "ערבוב" בין סבבים).
+      this.drawOrder = this.connectedPlayers()
+        .slice()
+        .sort((a, b) => a.joinOrder - b.joinOrder)
+        .map((p) => p.id);
       this.players.forEach((p) => (p.joinedMidGame = false));
     }
   }

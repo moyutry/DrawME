@@ -1,6 +1,33 @@
 <!doctype html>
 <html lang="he" dir="rtl">
 <head>
+<script>
+  // "שומר סף" מזערי, ראשון בעמוד ובלי שום תלות (לא ב-CSS, לא בסקריפטים
+  // האחרים): אם משהו נכשל במהלך האתחול (כולל בקבצים אחרים כמו avatar.js/
+  // canvas.js/app.js, לפני שהם בכלל הצליחו להראות מסך) והמשתמש/ת נשאר/ת מול
+  // מסך ריק/שחור בלי שום הסבר - אחרי כמה שניות מוצגת הודעת נפילה ברורה עם
+  // כפתור רענון, במקום תקיעות שקטה.
+  (function () {
+    function appBooted() {
+      var j = document.getElementById("screen-join");
+      var m = document.getElementById("screen-main");
+      return (j && !j.classList.contains("hidden")) || (m && !m.classList.contains("hidden"));
+    }
+    function showFallback() {
+      if (appBooted() || document.getElementById("boot-fallback")) return;
+      var box = document.createElement("div");
+      box.id = "boot-fallback";
+      box.style.cssText = "position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;background:#0d0e24;color:#f1f3ff;font-family:Arial,sans-serif;text-align:center;direction:rtl;";
+      box.innerHTML =
+        '<div><p style="font-size:1.15rem;font-weight:800;margin:0 0 12px;">\u{1F615} המשחק לא נטען כמו שצריך</p>' +
+        '<p style="margin:0 0 18px;color:#9ba3d1;">נסו לרענן את הדף. אם זה קורה שוב, נסו רשת אחרת (וויפי/סלולרי).</p>' +
+        '<button onclick="location.reload()" style="padding:12px 26px;border-radius:10px;border:none;background:#22d3ee;color:#071019;font-weight:800;font-size:1rem;">רענון</button></div>';
+      document.body.appendChild(box);
+    }
+    window.addEventListener("error", function () { setTimeout(showFallback, 300); });
+    setTimeout(showFallback, 6000);
+  })();
+</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>צייר ונחש - חדר פרטי</title>
@@ -12,18 +39,49 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="צייר ונחש" />
+<link rel="stylesheet" href="css/style.css" />
+<!-- הפונט נטען בלי לחסום את הרינדור הראשוני: אם fonts.googleapis.com חסום/איטי
+     (רשתות ארגוניות/בתי ספר, בעיות DNS מקומיות) המשחק עדיין עולה מיד עם גופן
+     חלופי (ראו fallback stack ב-style.css) במקום מסך שחור/ריק שמחכה לו לנצח. -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800;900&subset=hebrew&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="css/style.css" />
+<link
+  rel="preload"
+  as="style"
+  href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800;900&subset=hebrew&display=swap"
+  onload="this.onload=null;this.rel='stylesheet'"
+/>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800;900&subset=hebrew&display=swap" /></noscript>
 </head>
 <body>
 
 <div id="toast" class="toast hidden"></div>
 <div id="reactions-layer"></div>
-<div id="rotate-hint">
-  <span>📱↻ מומלץ לסובב את המכשיר לרוחב לחוויית ציור נוחה יותר</span>
-  <button id="rotate-hint-close" type="button" aria-label="סגור">✕</button>
+
+<!-- חוסם טהור-CSS (בלי תלות ב-JS) שמופיע אוטומטית כשהטלפון שוכב לרוחב -
+     המשחק נועד לשימוש במצב עומד בלבד, בכל מסך. -->
+<div id="rotate-overlay" class="page-overlay">
+  <div class="overlay-card">
+    <div class="rotate-icon">📱</div>
+    <p class="overlay-title">סובבו את הטלפון לאורך</p>
+    <p>המשחק בנוי לשימוש במצב עומד בלבד, לחוויה הכי נוחה 🎨</p>
+  </div>
+</div>
+
+<div id="disconnected-overlay" class="page-overlay hidden">
+  <div class="overlay-card">
+    <p class="overlay-title">🔌 החיבור לשרת נותק</p>
+    <p id="disconnected-text">מנסים להתחבר מחדש...</p>
+    <button id="reconnect-btn" type="button" class="btn btn-primary">התחבר מחדש</button>
+  </div>
+</div>
+
+<div id="ios-install-modal" class="page-overlay hidden">
+  <div class="overlay-card">
+    <p class="overlay-title">📲 התקנת האפליקציה</p>
+    <p>הקישו על כפתור השיתוף <span class="ios-share-icon">⬆️</span> בסרגל הדפדפן, ואז בחרו <strong>"הוסף למסך הבית"</strong>.</p>
+    <button type="button" id="ios-install-close" class="btn btn-primary">הבנתי</button>
+  </div>
 </div>
 
 <div id="disconnected-overlay" class="page-overlay hidden">
@@ -37,6 +95,12 @@
 <!-- מסך כניסה -->
 <section id="screen-join" class="screen hidden">
   <div class="card join-card">
+    <button type="button" id="install-card-btn" class="install-banner hidden">
+      <span class="install-banner-icon">📲</span>
+      <span class="install-banner-text">התקינו את האפליקציה למסך הבית - מהיר יותר ובלי דפדפן!</span>
+      <span class="install-banner-arrow">›</span>
+    </button>
+
     <h1 id="brand-title"><span class="brand-emoji">🎨</span> צייר ונחש</h1>
     <p class="subtitle">חדר פרטי אחד לכולם. מי שנכנס ראשון - מנהל/ת החדר.</p>
 

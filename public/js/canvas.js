@@ -25,7 +25,18 @@ class DrawingCanvas {
     this._stage = this.canvas.parentElement.parentElement;
 
     this._bindPointerEvents();
-    this._ro = new ResizeObserver(() => this.resize());
+    // ResizeObserver יכול לירות כמה פעמים ברצף ממש קרובות (למשל בזמן שה-
+    // מקלדת הווירטואלית נפתחת/נסגרת במובייל ומזיזה viewport) - עוטפים ב-
+    // requestAnimationFrame כדי לאחד אותן לחישוב אחד חלק, ולא לגרום ל"הבהוב"
+    // בזוהר סביב לוח הציור מכמה resize מיותרים תוך כדי אותה פריים.
+    let rafId = null;
+    this._ro = new ResizeObserver(() => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        this.resize();
+      });
+    });
     this._ro.observe(this._stage);
     this.resize();
   }
@@ -58,6 +69,7 @@ class DrawingCanvas {
     }
     w = Math.max(1, Math.round(w));
     h = Math.max(1, Math.round(h));
+    if (w === this.cssWidth && h === this.cssHeight) return; // אין שינוי אמיתי - לא נוגעים ב-DOM כדי לא לגרום להבהוב מיותר
     wrap.style.width = `${w}px`;
     wrap.style.height = `${h}px`;
 

@@ -1,6 +1,19 @@
 (() => {
   "use strict";
 
+  const el = (id) => document.getElementById(id);
+
+  // ---------- ניהול מסכים ----------
+  // מוצג כבר כאן, לפני כל אתחול אחר (קנבס/socket/אווטאר) - כך שגם אם משהו
+  // בהמשך האתחול נכשל (למשל דפדפן ישן בלי ResizeObserver), מסך הכניסה כבר
+  // גלוי במקום מסך ריק/שחור. ראו גם ה"שומר סף" הכללי יותר ב-index.html.
+  function setScreen(name) {
+    ["screen-join", "screen-main"].forEach((id) =>
+      el(id).classList.toggle("hidden", id !== `screen-${name}`)
+    );
+  }
+  setScreen("join");
+
   const DRAW_COLORS = [
     "#1e1e1e", "#ffffff", "#9b9b9b", "#e74c3c", "#e67e22", "#f1c40f",
     "#2ecc71", "#00892e", "#1abc9c", "#3498db", "#1e3fae", "#9b59b6",
@@ -8,7 +21,6 @@
   ];
 
   // ---------- מצב מקומי ----------
-  const el = (id) => document.getElementById(id);
   const socket = io();
 
   let myId = null;
@@ -18,6 +30,7 @@
   let lastTurnKey = null;
   let chatInitialized = false;
   let wordChoicesPayload = null;
+  let endCelebrated = false;
 
   // ---------- זהות קבועה (לחיבור מחדש) ----------
   // טוקן אקראי ששמור במכשיר, נפרד מהפרופיל הקוסמטי (שם/דמות) - מאפשר לשרת
@@ -69,17 +82,23 @@
     });
   }
 
-  const canvas = new DrawingCanvas(el("draw-canvas"), {
-    onPoint: (data) => socket.emit("draw-point", data),
-    onEnd: () => socket.emit("draw-end"),
-  });
-
-  // ---------- ניהול מסכים ----------
-
-  function setScreen(name) {
-    ["screen-join", "screen-main"].forEach((id) =>
-      el(id).classList.toggle("hidden", id !== `screen-${name}`)
-    );
+  // עטוף ב-try/catch: אם משהו בדפדפן הספציפי הזה לא נתמך (למשל אין
+  // ResizeObserver בדפדפן ישן/דפדפן פנימי של אפליקציה אחרת), עדיין רוצים
+  // שהלובי/צ'אט/הגדרות ימשיכו לעבוד - רק הציור עצמו ייפול בחזרה ל-no-op
+  // במקום להפיל את כל הסקריפט (ולהשאיר מסך ריק) בשלב הזה.
+  let canvas;
+  try {
+    canvas = new DrawingCanvas(el("draw-canvas"), {
+      onPoint: (data) => socket.emit("draw-point", data),
+      onEnd: () => socket.emit("draw-end"),
+    });
+  } catch (err) {
+    console.error("שגיאה באתחול לוח הציור:", err);
+    const noop = () => {};
+    canvas = {
+      setEnabled: noop, setColor: noop, setSize: noop, setEraser: noop,
+      setFillMode: noop, setStrokes: noop, clear: noop, applyRemotePoint: noop,
+    };
   }
 
   // ---------- מסך כניסה + עורך דמות ----------
@@ -177,8 +196,6 @@
     if (e.key === "Enter") el("submit-join-code-btn").click();
   });
   el("create-room-btn").addEventListener("click", doCreateRoom);
-
-  setScreen("join");
 
   // תמיד מנסים קודם "rejoin" (עם הטוקן הקבוע + קוד החדר האחרון אם יש) - זה
   // מכסה גם טעינה ראשונה (שנכשלת בעדינות ונשארת במסך הכניסה), גם רענון
@@ -486,6 +503,23 @@
     setTimeout(() => span.remove(), 2300);
   });
 
+  // חגיגת קונפטי קטנה ונטולת-תלויות (בלי ספרייה חיצונית) במסך הסיום -
+  // תוספת חמודה שמתאימה לקהל היעד (ילדים) ומרגישה יותר "גמר משחק אמיתי".
+  const CONFETTI_COLORS = ["#22d3ee", "#b78cf0", "#f6c453", "#38d996", "#ff5c7a"];
+  function launchConfetti() {
+    const layer = el("reactions-layer");
+    for (let i = 0; i < 50; i++) {
+      const piece = document.createElement("span");
+      piece.className = "confetti-piece";
+      piece.style.right = Math.random() * 100 + "%";
+      piece.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      piece.style.animationDuration = 2.2 + Math.random() * 1.6 + "s";
+      piece.style.animationDelay = Math.random() * 0.5 + "s";
+      layer.appendChild(piece);
+      setTimeout(() => piece.remove(), 4500);
+    }
+  }
+
   // ---------- מילים לבחירה (לצייר בלבד) ----------
 
   socket.on("word-choices", (data) => {
@@ -516,7 +550,15 @@
 
     if (state.phase === "lobby") renderLobby(state);
     if (inGame) renderGame(state);
-    if (state.phase === "ended") renderEnd(state);
+    if (state.phase === "ended") {
+      renderEnd(state);
+      if (!endCelebrated) {
+        endCelebrated = true;
+        launchConfetti();
+      }
+    } else {
+      endCelebrated = false;
+    }
 
     if (!chatInitialized) {
       const box = el("chat-messages");
@@ -738,12 +780,16 @@
         title.textContent = `${drawer ? drawer.name : "מישהו"} בוחר/ת מילה...`;
       }
       const chooseTimerEl = el("choose-timer");
+      clearInterval(window.__tvnChooseTimerInt);
       const tick = () => {
         if (!state.chooseEndsAt) return;
         const left = Math.max(0, Math.ceil((state.chooseEndsAt - Date.now()) / 1000));
         chooseTimerEl.textContent = left + " שניות";
       };
       tick();
+      window.__tvnChooseTimerInt = setInterval(tick, 250);
+    } else {
+      clearInterval(window.__tvnChooseTimerInt);
     }
 
     // אוברליי חשיפת מילה
@@ -803,14 +849,19 @@
   }
 
   // ---------- סיבוב מסך (best-effort) ----------
+  // המשחק תומך במצב עומד (portrait) בלבד - אם המכשיר שוכב לרוחב, #rotate-overlay
+  // ב-CSS טהור (media query, לא תלוי ב-JS בכלל) כבר חוסם ומנחה לסובב חזרה.
+  // כאן רק ניסיון best-effort לנעול בפועל למצב עומד בדפדפנים שתומכים בזה
+  // (בעיקר Chrome אנדרואיד, ורק כשהעמוד רץ כאפליקציה מותקנת/fullscreen) -
+  // חיובי בלבד, אף פעם לא הפוך (לא ננעלים ללרוחב יותר).
 
   let orientationLocked = false;
   function updateOrientationLock(inGame) {
     if (inGame && !orientationLocked) {
       orientationLocked = true;
       try {
-        screen.orientation && screen.orientation.lock && screen.orientation.lock("landscape").catch(() => {});
-      } catch { /* לא נתמך - לא קורה כלום */ }
+        screen.orientation && screen.orientation.lock && screen.orientation.lock("portrait").catch(() => {});
+      } catch { /* לא נתמך - לא קורה כלום, ה-CSS overlay עדיין עובד */ }
     } else if (!inGame && orientationLocked) {
       orientationLocked = false;
       try {
@@ -818,8 +869,6 @@
       } catch { /* לא נתמך - לא קורה כלום */ }
     }
   }
-
-  el("rotate-hint-close").addEventListener("click", () => el("rotate-hint").classList.add("dismissed"));
 
   // ---------- נגישות: הקראת מילים + ניחוש בקול (Web Speech API, חינמי ומובנה בדפדפן) ----------
 
@@ -892,7 +941,11 @@
     try { return JSON.parse(str); } catch { return null; }
   }
 
-  // ---------- PWA ----------
+  // ---------- PWA: התקנה ----------
+  // הכפתור מוצג באופן יזום (גם בכניסה, גם בסרגל העליון) בכל פעם שהמשחק לא
+  // רץ כאפליקציה מותקנת - לא מחכים ל-beforeinstallprompt (Chrome/Edge
+  // באנדרואיד בלבד), כי ב-iOS Safari האירוע הזה אף פעם לא נורה, ובלעדיו
+  // הכפתור היה נשאר מוסתר אצל כל משתמש/ת אייפון.
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
@@ -900,18 +953,44 @@
     });
   }
 
+  const isIosDevice = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  function isStandalonePwa() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+
   let deferredInstallPrompt = null;
+
+  function updateInstallUI() {
+    const show = !isStandalonePwa();
+    el("install-btn").classList.toggle("hidden", !show);
+    el("install-card-btn").classList.toggle("hidden", !show);
+  }
+  updateInstallUI();
+
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
-    el("install-btn").classList.remove("hidden");
+    updateInstallUI();
   });
-  el("install-btn").addEventListener("click", async () => {
-    if (!deferredInstallPrompt) return;
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
+
+  async function triggerInstall() {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      updateInstallUI();
+    } else if (isIosDevice) {
+      el("ios-install-modal").classList.remove("hidden");
+    } else {
+      showToast("כדי להתקין: תפריט הדפדפן ⋮ ← הוסף למסך הבית");
+    }
+  }
+  el("install-btn").addEventListener("click", triggerInstall);
+  el("install-card-btn").addEventListener("click", triggerInstall);
+  el("ios-install-close").addEventListener("click", () => el("ios-install-modal").classList.add("hidden"));
+
+  window.addEventListener("appinstalled", () => {
     deferredInstallPrompt = null;
-    el("install-btn").classList.add("hidden");
+    updateInstallUI();
   });
-  window.addEventListener("appinstalled", () => el("install-btn").classList.add("hidden"));
 })();

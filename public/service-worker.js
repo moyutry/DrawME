@@ -1,7 +1,7 @@
 // Service Worker פשוט ל-PWA: מאפשר התקנה ותצוגה בסיסית גם אופליין.
 // לא נוגע בכלל בבקשות socket.io כדי לא לשבור את החיבור בזמן אמת.
 
-const CACHE_NAME = "tvn-cache-v2";
+const CACHE_NAME = "tvn-cache-v3";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -34,6 +34,24 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.method !== "GET" || url.pathname.startsWith("/socket.io/")) {
     return; // אל תיגע בתעבורת socket.io בזמן אמת
+  }
+
+  // ניווט לדף עצמו (טעינה/רענון) - תמיד רשת קודם. כך גרסה שבורה/ישנה של
+  // ה-HTML לעולם לא "תיתקע" במטמון ותוצג שוב ושוב בכל רענון (מסך שחור שלא
+  // זז) - רק אם הרשת ממש לא זמינה נופלים חזרה לעותק השמור.
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((res) => {
+          if (res && res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/index.html")))
+    );
+    return;
   }
 
   event.respondWith(
