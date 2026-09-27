@@ -47,6 +47,42 @@
   const myToken = getOrCreateToken();
   let myRoomCode = localStorage.getItem("tvn-room") || null;
 
+  // ---------- סטטיסטיקות לצמיתות (לפי טוקן המכשיר) ----------
+  // מבוקשות כבר בטעינה (גם לפני הצטרפות לחדר) כדי שמסך הכניסה יציג אותן
+  // מיד; מתעדכנות שוב אוטומטית בסיום כל משחק (השרת דוחף "stats" מחדש), מה
+  // שגם מאפשר לזהות "שיא חדש" בהשוואה לגרסה הקודמת שכבר היה לנו.
+  let myStats = null;
+  socket.on("connect", () => socket.emit("get-stats", { token: myToken }));
+
+  function renderStatsCard(stats) {
+    el("stat-level").textContent = stats.level;
+    el("stat-wins").textContent = stats.totalWins;
+    el("stat-games").textContent = stats.totalGamesPlayed;
+    el("stats-card").classList.remove("hidden");
+    const badgesBox = el("stats-badges");
+    badgesBox.textContent = stats.badges.join("  ");
+    badgesBox.classList.toggle("hidden", stats.badges.length === 0);
+  }
+
+  socket.on("stats", (stats) => {
+    const prev = myStats;
+    myStats = stats;
+    renderStatsCard(stats);
+
+    if (prev && lastState && lastState.phase === "ended") {
+      const bits = [];
+      if (stats.totalWins > prev.totalWins) bits.push("🎉 ניצחון חדש!");
+      if (stats.level > prev.level) bits.push(`⭐ עלית לרמה ${stats.level}!`);
+      stats.badges.filter((b) => !prev.badges.includes(b)).forEach((b) => bits.push(`תג חדש: ${b}`));
+      const callout = el("end-stats-callout");
+      if (bits.length) {
+        callout.textContent = bits.join(" · ");
+        callout.classList.remove("hidden");
+        playAchievementSound();
+      }
+    }
+  });
+
   // ---------- מצב "לא יודע/ת לקרוא": תמונה במקום מילה ----------
   // המיפוי מילה -> תמונה נוצר מראש (npm run fetch-word-images) ונטען פעם אחת;
   // מילים בלי תמונה (כולל כל מילה מותאמת-אישית) פשוט חוזרות undefined - הקוד
@@ -110,6 +146,7 @@
       : Avatar.COLORS[Math.floor(Math.random() * Avatar.COLORS.length)],
     eyes: savedProfile && savedProfile.avatar ? Avatar.clampIndex(savedProfile.avatar.eyes, Avatar.EYES_COUNT) : 0,
     mouth: savedProfile && savedProfile.avatar ? Avatar.clampIndex(savedProfile.avatar.mouth, Avatar.MOUTH_COUNT) : 0,
+    pattern: savedProfile && savedProfile.avatar ? Avatar.clampIndex(savedProfile.avatar.pattern, Avatar.PATTERN_COUNT) : 0,
   };
 
   function renderAvatarPreview() {
@@ -124,6 +161,7 @@
       btn.type = "button";
       btn.className = "color-swatch" + (c === initial ? " selected" : "");
       btn.style.background = c;
+      btn.dataset.color = c;
       btn.addEventListener("click", () => {
         [...container.children].forEach((ch) => ch.classList.remove("selected"));
         btn.classList.add("selected");
@@ -150,6 +188,24 @@
   });
   el("mouth-next").addEventListener("click", () => {
     avatarConfig.mouth = Avatar.clampIndex(avatarConfig.mouth + 1, Avatar.MOUTH_COUNT);
+    renderAvatarPreview();
+  });
+  el("pattern-prev").addEventListener("click", () => {
+    avatarConfig.pattern = Avatar.clampIndex(avatarConfig.pattern - 1, Avatar.PATTERN_COUNT);
+    renderAvatarPreview();
+  });
+  el("pattern-next").addEventListener("click", () => {
+    avatarConfig.pattern = Avatar.clampIndex(avatarConfig.pattern + 1, Avatar.PATTERN_COUNT);
+    renderAvatarPreview();
+  });
+  el("randomize-avatar-btn").addEventListener("click", () => {
+    avatarConfig.color = Avatar.COLORS[Math.floor(Math.random() * Avatar.COLORS.length)];
+    avatarConfig.eyes = Math.floor(Math.random() * Avatar.EYES_COUNT);
+    avatarConfig.mouth = Math.floor(Math.random() * Avatar.MOUTH_COUNT);
+    avatarConfig.pattern = Math.floor(Math.random() * Avatar.PATTERN_COUNT);
+    document.querySelectorAll("#color-picker .color-swatch").forEach((btn) => {
+      btn.classList.toggle("selected", btn.dataset.color === avatarConfig.color);
+    });
     renderAvatarPreview();
   });
 
@@ -390,9 +446,42 @@
     if (!e.target.closest(".popover-wrap")) closePopovers();
   });
 
+  // פופאובר אישור מעוצב (במקום confirm() דפדפני שלא תואם את שאר העיצוב) -
+  // ממוקם ב-position:fixed ליד הכפתור שהפעיל אותו, כמו popover הצבע/העובי.
+  function showConfirmPopover(triggerEl, message, onConfirm) {
+    document.getElementById("confirm-popover")?.remove();
+    closePopovers();
+    const pop = document.createElement("div");
+    pop.id = "confirm-popover";
+    pop.className = "confirm-popover";
+    pop.innerHTML =
+      `<p>${message}</p>` +
+      `<div class="confirm-popover-actions">` +
+      `<button type="button" class="btn btn-secondary" data-action="cancel">ביטול</button>` +
+      `<button type="button" class="btn btn-primary" data-action="ok">כן, בטוח/ה</button>` +
+      `</div>`;
+    document.body.appendChild(pop);
+    positionPopover(pop, triggerEl);
+
+    function cleanup() {
+      pop.remove();
+      document.removeEventListener("click", onOutsideClick, true);
+    }
+    function onOutsideClick(e) {
+      if (!pop.contains(e.target)) cleanup();
+    }
+    pop.querySelector('[data-action="cancel"]').addEventListener("click", cleanup);
+    pop.querySelector('[data-action="ok"]').addEventListener("click", () => {
+      cleanup();
+      onConfirm();
+    });
+    setTimeout(() => document.addEventListener("click", onOutsideClick, true), 0);
+  }
+
   el("tool-undo").addEventListener("click", () => socket.emit("undo-canvas"));
-  el("tool-clear").addEventListener("click", () => {
-    if (confirm("לנקות את כל הציור?")) socket.emit("clear-canvas");
+  el("tool-clear").addEventListener("click", (e) => {
+    e.stopPropagation();
+    showConfirmPopover(el("tool-clear"), "לנקות את כל הציור?", () => socket.emit("clear-canvas"));
   });
 
   socket.on("draw-point", (data) => canvas.applyRemotePoint(data));
@@ -467,19 +556,30 @@
     input.value = "";
   });
 
-  socket.on("chat-message", (msg) => appendChatMessage(msg));
+  socket.on("chat-message", (msg) => {
+    appendChatMessage(msg);
+    if (msg.correct) playCorrectGuessSound();
+  });
 
   function appendChatMessage(msg) {
     const box = el("chat-messages");
     const div = document.createElement("div");
     div.className = "chat-msg" + (msg.system ? " system" : "") + (msg.correct ? " correct" : "");
     if (msg.name && !msg.system) {
+      if (msg.avatar) {
+        const avatarSlot = document.createElement("span");
+        avatarSlot.className = "chat-msg-avatar";
+        Avatar.renderAvatar(avatarSlot, { color: msg.color, eyes: msg.avatar.eyes, mouth: msg.avatar.mouth, pattern: msg.avatar.pattern }, 22);
+        div.appendChild(avatarSlot);
+      }
+      const textWrap = document.createElement("span");
       const who = document.createElement("span");
       who.className = "who";
       who.style.color = msg.color || "inherit";
       who.textContent = msg.name + ": ";
-      div.appendChild(who);
-      div.appendChild(document.createTextNode(msg.text));
+      textWrap.appendChild(who);
+      textWrap.appendChild(document.createTextNode(msg.text));
+      div.appendChild(textWrap);
     } else {
       div.textContent = msg.text;
     }
@@ -551,11 +651,12 @@
     if (state.phase === "lobby") renderLobby(state);
     if (inGame) renderGame(state);
     if (state.phase === "ended") {
-      renderEnd(state);
       if (!endCelebrated) {
         endCelebrated = true;
         launchConfetti();
+        el("end-stats-callout").classList.add("hidden"); // מנקים שארית מהופעה קודמת של מסך הסיום
       }
+      renderEnd(state);
     } else {
       endCelebrated = false;
     }
@@ -582,7 +683,7 @@
 
       const avatarSlot = document.createElement("span");
       avatarSlot.className = "player-avatar";
-      Avatar.renderAvatar(avatarSlot, p.avatar, 26);
+      Avatar.renderAvatar(avatarSlot, p.avatar, 30);
 
       const name = document.createElement("span");
       name.className = "player-name";
@@ -613,6 +714,13 @@
         badge.className = "player-badge";
         badge.textContent = "✅";
         li.appendChild(badge);
+      }
+      if (p.winStreak >= 2) {
+        const streak = document.createElement("span");
+        streak.className = "streak-chip";
+        streak.title = `${p.winStreak} ניחושים נכונים ברצף`;
+        streak.textContent = `🔥${p.winStreak}`;
+        li.appendChild(streak);
       }
       li.appendChild(score);
 
@@ -679,7 +787,11 @@
 
     const enoughPlayers = state.players.length >= 2;
     el("start-btn").disabled = !enoughPlayers;
-    el("need-players-hint").textContent = enoughPlayers ? "" : "צריך לפחות 2 שחקנים כדי להתחיל.";
+    el("need-players-hint").textContent = enoughPlayers
+      ? ""
+      : isPrivateRoom
+        ? "🙋 צריך לפחות 2 שחקנים - שתפו את הקוד עם חברים כדי שיצטרפו!"
+        : "🙋 צריך לפחות 2 שחקנים כדי להתחיל - ממתינים שעוד מישהו/י יצטרפ/ו.";
 
     const phaseChanged = lastPhaseForForm !== "lobby";
     if (!iAmHost || phaseChanged || !formTouched) {
@@ -702,6 +814,7 @@
       canvas.setStrokes(state.strokes || []);
       lastTurnKey = turnKey;
       wordChoicesPayload = null;
+      if (state.isMeDrawing) playYourTurnSound();
     }
 
     // תצוגת מילה - לצייר/ת בזמן ציור עם מצב "לא יודע/ת לקרוא" פעיל: תמונה
@@ -807,7 +920,7 @@
     const players = state.players.slice().sort((a, b) => (b.lastTurnPoints || 0) - (a.lastTurnPoints || 0));
     players.forEach((p) => {
       const row = document.createElement("li");
-      row.className = "reveal-score-row" + (p.id === myId ? " me" : "");
+      row.className = "reveal-score-row" + (p.id === myId ? " me" : "") + (p.isMvp ? " mvp" : "");
 
       const avatarSlot = document.createElement("span");
       avatarSlot.className = "player-avatar";
@@ -815,7 +928,7 @@
 
       const name = document.createElement("span");
       name.className = "reveal-score-name";
-      name.textContent = p.name + (p.isDrawing ? " 🖌️" : "");
+      name.textContent = (p.isMvp ? "👑 " : "") + p.name + (p.isDrawing ? " 🖌️" : "");
 
       const points = document.createElement("span");
       const earned = p.lastTurnPoints || 0;
@@ -831,18 +944,49 @@
 
   function renderEnd(state) {
     const podium = el("podium");
+    const rest = el("podium-rest");
     podium.innerHTML = "";
+    rest.innerHTML = "";
     const medals = ["🥇", "🥈", "🥉"];
-    state.players.forEach((p, i) => {
+
+    state.players.slice(0, 3).forEach((p, i) => {
+      const li = document.createElement("li");
+      li.className = `podium-place place-${i + 1}`;
+
+      const avatarSlot = document.createElement("span");
+      avatarSlot.className = "player-avatar";
+      Avatar.renderAvatar(avatarSlot, p.avatar, i === 0 ? 58 : 44);
+
+      const medal = document.createElement("span");
+      medal.className = "podium-medal";
+      medal.textContent = medals[i];
+
+      const name = document.createElement("span");
+      name.className = "podium-name";
+      name.textContent = p.name;
+
+      const score = document.createElement("span");
+      score.className = "podium-score";
+      score.textContent = p.score;
+
+      li.appendChild(avatarSlot);
+      li.appendChild(medal);
+      li.appendChild(name);
+      li.appendChild(score);
+      podium.appendChild(li);
+    });
+
+    state.players.slice(3).forEach((p, i) => {
       const li = document.createElement("li");
       const rank = document.createElement("span");
-      rank.textContent = `${medals[i] || i + 1 + "."} ${p.name}`;
+      rank.textContent = `${i + 4}. ${p.name}`;
       const score = document.createElement("span");
       score.textContent = p.score;
       li.appendChild(rank);
       li.appendChild(score);
-      podium.appendChild(li);
+      rest.appendChild(li);
     });
+
     const iAmHost = state.you && state.you.isHost;
     el("play-again-btn").classList.toggle("hidden", !iAmHost);
     el("end-hint").textContent = iAmHost ? "" : "ממתינים שהמנהל/ת ילחץ/תלחץ על שחקו שוב...";
@@ -926,6 +1070,63 @@
     });
   }
   initVoiceInput();
+
+  // ---------- סאונד + רטט (משוב חגיגי קליל, בלי קובץ בינארי - טונים סינתטיים) ----------
+
+  let soundOn = localStorage.getItem("tvn-sound") !== "off";
+  let audioCtx = null;
+
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+    return audioCtx;
+  }
+  // "מחממים"/פותחים את הקשר בפעם הראשונה שיש מחוות משתמש/ת בעמוד - כדי
+  // שמדיניות ה-autoplay של הדפדפן לא תחסום את הצליל הראשון שרוצים להשמיע.
+  document.addEventListener("pointerdown", () => getAudioCtx(), { once: true });
+
+  function playTone(freqs, duration = 0.14) {
+    if (!soundOn) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    let t = ctx.currentTime;
+    freqs.forEach((f) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = f;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.25, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + duration + 0.02);
+      t += duration * 0.55;
+    });
+  }
+
+  function vibrate(pattern) {
+    try { navigator.vibrate && navigator.vibrate(pattern); } catch { /* לא נתמך - לא קורה כלום */ }
+  }
+
+  function playCorrectGuessSound() { playTone([523.25, 659.25, 783.99]); vibrate(40); } // דו-מי-סול עולה
+  function playYourTurnSound() { playTone([392, 523.25]); vibrate([30, 40, 30]); }
+  function playAchievementSound() { playTone([523.25, 659.25, 783.99, 1046.5], 0.16); vibrate([50, 40, 50, 40, 80]); }
+
+  function updateSoundToggleUI() {
+    el("sound-toggle-btn").textContent = soundOn ? "🔊" : "🔇";
+    el("sound-toggle-btn").classList.toggle("active", !soundOn);
+  }
+  updateSoundToggleUI();
+  el("sound-toggle-btn").addEventListener("click", () => {
+    soundOn = !soundOn;
+    localStorage.setItem("tvn-sound", soundOn ? "on" : "off");
+    updateSoundToggleUI();
+    if (soundOn) playTone([523.25]); // משוב מיידי שהצליל חזר לפעול
+  });
 
   // ---------- כלי עזר ----------
 

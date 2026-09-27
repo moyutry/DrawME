@@ -116,6 +116,9 @@ class Room {
     this.choosePausedRemainingMs = null;
     this.drawPausedRemainingMs = null;
     this.pausedHints = null;
+    this.roundMvpId = null;
+    this.winStreaks = new Map(); // playerId -> תורים רצופים עם ניחוש נכון (מתאפס במשחק חדש)
+    this.bestStreakThisGame = new Map(); // playerId -> השיא שהושג במשחק הנוכחי (לסטטיסטיקה לצמיתות)
     this.clearTimers();
   }
 
@@ -151,7 +154,7 @@ class Room {
       joinOrder: this.joinCounter++,
       guessedCorrect: false,
       joinedMidGame: this.phase !== "lobby" && this.phase !== "ended",
-      avatar: { eyes: avatar.eyes, mouth: avatar.mouth },
+      avatar: { eyes: avatar.eyes, mouth: avatar.mouth, pattern: avatar.pattern },
       canRead: canRead !== false,
     };
     this.players.set(socketId, player);
@@ -289,7 +292,7 @@ class Room {
     player.disconnectedAt = null;
     player.name = name;
     player.color = avatar.color;
-    player.avatar = { eyes: avatar.eyes, mouth: avatar.mouth };
+    player.avatar = { eyes: avatar.eyes, mouth: avatar.mouth, pattern: avatar.pattern };
     player.canRead = canRead !== false;
     if (this.currentDrawerId === socketId) this.resumeTurnAfterDrawerReconnect();
     return player;
@@ -306,7 +309,9 @@ class Room {
       isDrawing: p.id === this.currentDrawerId,
       guessedCorrect: p.guessedCorrect,
       lastTurnPoints: this.turnPoints.get(p.id) || 0,
-      avatar: { color: p.color, eyes: p.avatar.eyes, mouth: p.avatar.mouth },
+      isMvp: this.phase === "reveal" && p.id === this.roundMvpId,
+      winStreak: this.winStreaks.get(p.id) || 0,
+      avatar: { color: p.color, eyes: p.avatar.eyes, mouth: p.avatar.mouth, pattern: p.avatar.pattern },
     };
   }
 
@@ -361,6 +366,9 @@ class Room {
     this.round = 0;
     this.turnIndex = -1;
     this.players.forEach((p) => (p.score = 0));
+    this.winStreaks = new Map();
+    this.bestStreakThisGame = new Map();
+    this.roundMvpId = null;
     this.startNextRoundIfNeeded();
     this.advanceTurn();
     return { ok: true };
@@ -586,6 +594,31 @@ class Room {
     }
     this.phase = "reveal";
     const word = this.currentWord;
+
+    // MVP הסבב: מי שצבר הכי הרבה נקודות מניחושים נכונים בתור הזה (לא כולל
+    // את בונוס ה-40% שהמצייר/ת מקבל/ת) - משקלל גם מהירות (בונוס "ראשון/ה
+    // לנחש") וגם דיוק, בלי חישוב נפרד.
+    let mvpId = null, mvpPoints = 0;
+    this.turnPoints.forEach((pts, pid) => {
+      if (pid !== this.currentDrawerId && pts > mvpPoints) {
+        mvpPoints = pts;
+        mvpId = pid;
+      }
+    });
+    this.roundMvpId = mvpId;
+
+    // רצף ניחושים נכונים (למי שהיה זכאי לנחש בתור הזה, לא כולל המצייר/ת) -
+    // עולה במי שניחש/ה נכון, מתאפס במי שלא. נשמר בזיכרון בלבד למשך המשחק
+    // הנוכחי (מתאפס במשחק חדש) - בנפרד מהניקוד/ניצחונות הנשמרים לצמיתות.
+    this.connectedPlayers()
+      .filter((p) => p.id !== this.currentDrawerId)
+      .forEach((p) => {
+        const current = this.winStreaks.get(p.id) || 0;
+        const next = p.guessedCorrect ? current + 1 : 0;
+        this.winStreaks.set(p.id, next);
+        this.bestStreakThisGame.set(p.id, Math.max(this.bestStreakThisGame.get(p.id) || 0, next));
+      });
+
     this.systemMessage(
       drawerLeft ? `הצייר/ת עזב/ה. המילה הייתה: ${word}` : `הזמן נגמר! המילה הייתה: ${word}`
     );
@@ -603,6 +636,27 @@ class Room {
     this.currentDrawerId = null;
     this.currentWord = null;
     this.broadcastState();
+    this.recordStatsForAllPlayers();
+  }
+
+  // מעדכן סטטיסטיקות לצמיתות (לפי טוקן המכשיר) לכל מי שהיה/הייתה בחדר
+  // במשחק הזה, ומשדר לכל אחד/ת את הסטטיסטיקה המעודכנת שלו/ה בחזרה - כדי
+  // שמסך הסיום יוכל להציג "שיא חדש!" בלי לבקש מהלקוח לשלוח בקשה נוספת.
+  recordStatsForAllPlayers() {
+    const players = [...this.players.values()];
+    const topScore = Math.max(0, ...players.map((p) => p.score));
+    players.forEach((p) => {
+      if (!p.token) return;
+      const won = topScore > 0 && p.score === topScore;
+      db.recordGameResult(p.token, {
+        name: p.name,
+        won,
+        scoreEarned: p.score,
+        bestStreakThisGame: this.bestStreakThisGame.get(p.id) || 0,
+      })
+        .then((stats) => this.emitToPlayer(p.id, "stats", stats))
+        .catch((err) => console.error("[room] שגיאה בשמירת סטטיסטיקות:", err.message));
+    });
   }
 
   backToLobby(socketId) {
@@ -672,7 +726,7 @@ class Room {
 
   systemMessage(text, fromPlayer) {
     const msg = fromPlayer
-      ? { name: fromPlayer.name, color: fromPlayer.color, text, ts: Date.now() }
+      ? { name: fromPlayer.name, color: fromPlayer.color, avatar: fromPlayer.avatar, text, ts: Date.now() }
       : { system: true, text, ts: Date.now() };
     this.chatHistory.push(msg);
     if (this.chatHistory.length > 80) this.chatHistory.shift();

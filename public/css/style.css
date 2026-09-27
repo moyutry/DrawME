@@ -1,40 +1,56 @@
 :root {
-  --bg: #0d0e24;
-  --bg-grad: radial-gradient(ellipse 120% 80% at 50% -10%, #241f52 0%, #0d0e24 55%);
-  --bg-panel: rgba(255, 255, 255, 0.06);
-  --bg-panel-solid: #1a1c3d;
-  --bg-raised: #191b3a;
+  /* רקע בהיר וחם (קרם) - במקום כחול-כהה - כדי שצבעי המשחק הרוויים (הזהים
+     למשפחת הצבעים של הדמויות ולוח הציור, ראו DRAW_COLORS/AVATAR_COLORS
+     ב-app.js/avatar.js) יבלטו על גביו. */
+  --bg: #fff8ec;
+  --bg-grad: radial-gradient(ellipse 150% 100% at 50% -10%, #fff1cf 0%, #fff8ec 55%);
+  --surface: #ffffff;
+  --surface-tint: #fff4e0;
+  --surface-dim: #f3e9d8;
 
-  --primary: #22d3ee;
-  --primary-dark: #0aa9c4;
-  --primary-rgb: 34, 211, 238;
+  --primary: #9b59b6;
+  --primary-dark: #7d3fa0;
+  --primary-rgb: 155, 89, 182;
 
-  --secondary: #b78cf0;
-  --secondary-dark: #9866df;
-  --secondary-rgb: 183, 140, 240;
+  --secondary: #3498db;
+  --secondary-dark: #2679b5;
+  --secondary-rgb: 52, 152, 219;
 
-  --accent-yellow: #f6c453;
-  --accent-yellow-rgb: 246, 196, 83;
-  --accent-green: #38d996;
-  --accent-red: #ff5c7a;
-  --accent-blue: #22d3ee;
-  --danger: #ff5c7a;
+  --accent-yellow: #f1c40f;
+  --accent-yellow-rgb: 241, 196, 15;
+  --accent-orange: #e67e22;
+  --accent-orange-rgb: 230, 126, 34;
+  --accent-green: #2ecc71;
+  --accent-green-rgb: 46, 204, 113;
+  --accent-teal: #1abc9c;
+  --accent-teal-rgb: 26, 188, 156;
+  --accent-pink: #e84393;
+  --accent-pink-rgb: 232, 67, 147;
+  --accent-red: #e74c3c;
+  --accent-red-rgb: 231, 76, 60;
+  --danger: #e74c3c;
 
-  --text: #f1f3ff;
-  --text-muted: #9ba3d1;
-  --border: rgba(255, 255, 255, 0.14);
-  --border-strong: rgba(255, 255, 255, 0.3);
-  --ink: #071019; /* טקסט כהה על גבי רקעי אקסנט בהירים (זהב/ציאן/ירוק) */
+  --text: #2d2440;
+  --text-muted: #8b83a0;
+  --border: rgba(45, 36, 64, 0.14);
+  --border-strong: rgba(45, 36, 64, 0.28);
+  --ink: #2d2440; /* טקסט כהה על גבי רקעי אקסנט בהירים (בעיקר צהוב) */
+  --outline: #2d2440; /* קו מתאר "קומיקס" כהה על כרטיסים/כפתורים */
 
-  --shadow-raised: 6px 6px 14px rgba(0, 0, 0, 0.45), -4px -4px 10px rgba(255, 255, 255, 0.04);
-  --shadow-raised-lg: 9px 9px 20px rgba(0, 0, 0, 0.5), -5px -5px 12px rgba(255, 255, 255, 0.04);
-  --shadow-raised-sm: 3px 3px 8px rgba(0, 0, 0, 0.4), -2px -2px 6px rgba(255, 255, 255, 0.035);
-  --shadow-in: inset 3px 3px 8px rgba(0, 0, 0, 0.45), inset -2px -2px 6px rgba(255, 255, 255, 0.04);
+  /* "לחיצה תלת-ממדית" - צל אחיד (לא מטושטש) מתחת לכפתור, שמתקצר ב-:active
+     ומדמה כפתור פיזי שנלחץ. שפה חזותית שטוחה, עגולה וצבעונית - Kahoot/Duolingo. */
+  --shadow-raised: 0 4px 0 rgba(45, 36, 64, 0.22);
+  --shadow-raised-lg: 0 6px 0 rgba(45, 36, 64, 0.24), 0 10px 20px rgba(45, 36, 64, 0.14);
+  --shadow-raised-sm: 0 2px 0 rgba(45, 36, 64, 0.18);
+  --shadow-in: 0 1px 0 rgba(45, 36, 64, 0.2);
+  --shadow-card: 0 3px 0 rgba(45, 36, 64, 0.1), 0 10px 24px rgba(45, 36, 64, 0.1);
 
-  --glass-bg: rgba(255, 255, 255, 0.06);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.14);
-  --glass-blur: blur(18px) saturate(140%);
-  --shadow-glass: 0 12px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  /* שמות "glass-*" נשמרו (למרות שאין יותר זכוכית/blur בפועל) כדי שכל
+     המקומות שכבר משתמשים בהם דרך var() יקבלו את הלוק השטוח החדש בלי לגעת
+     בכל אתר קריאה בנפרד. */
+  --glass-bg: var(--surface);
+  --glass-border: 2px solid var(--border-strong);
+  --shadow-glass: var(--shadow-card);
 
   --radius: 16px;
   --radius-lg: 24px;
@@ -42,7 +58,7 @@
      במחשב לא ייראה "מתוח" כשצופים בו בטלפון עומד (ולהפך), כי לכל הלקוחות אותה צורה
      יחסית. מספר יחידי (לא "3 / 4") כדי שאפשר לחשב איתו בשני הכיוונים ב-calc(). */
   --canvas-ratio: 0.75;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -107,45 +123,43 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
 .overlay:not(.hidden) .overlay-card { animation: pop-in 0.24s cubic-bezier(0.2, 0.8, 0.3, 1.15) both; }
 .popover:not(.hidden) { animation: pop-in 0.16s ease-out both; }
 
-/* ---------- כרטיסים / פאנלים (זכוכית) ---------- */
+/* ---------- כרטיסים / פאנלים - שטוח, עגול, קו מתאר בולט ---------- */
 
 .card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
+  background: var(--surface);
+  border: 3px solid var(--outline);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-glass);
+  box-shadow: var(--shadow-card);
   padding: 28px;
   width: min(440px, 92vw);
 }
 
-/* ---------- כפתורים - זכוכית + ניומורפיזם ---------- */
+/* ---------- כפתורים - שטוחים, עגולים, "לחיצה תלת-ממדית" ---------- */
 
 .btn, .tool-btn, .word-choice-btn, .reaction-btn, .color-swatch, .arrow-btn {
-  border: 1px solid var(--border-strong);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 45%), var(--bg-panel-solid);
+  border: 2.5px solid var(--outline);
+  background: var(--surface-tint);
   box-shadow: var(--shadow-raised);
   color: var(--text);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
 }
 
 .btn:active, .tool-btn:active, .word-choice-btn:active, .reaction-btn:active, .color-swatch:active, .arrow-btn:active {
-  transform: scale(0.96) translateY(1px);
+  transform: translateY(3px);
   box-shadow: var(--shadow-in);
 }
 
 .btn:focus-visible, .tool-btn:focus-visible, .word-choice-btn:focus-visible,
 .reaction-btn:focus-visible, .color-swatch:focus-visible, .arrow-btn:focus-visible,
 #name-input:focus-visible {
-  outline: 3px solid var(--primary);
+  outline: 3px solid var(--secondary);
   outline-offset: 2px;
 }
 
 #chat-input:focus-visible { outline: none; }
 
 .btn {
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 10px 18px;
   font-size: 1rem;
   font-weight: 800;
@@ -161,16 +175,16 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 55%), var(--primary);
-  color: var(--ink);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--outline);
 }
-.btn-primary:hover:not(:disabled) { background: linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 55%), var(--primary-dark); }
+.btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
 
 .btn-secondary {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 55%), var(--accent-green);
-  color: #0b2b1c;
-  border-color: rgba(255, 255, 255, 0.4);
+  background: var(--accent-green);
+  color: #0b3d24;
+  border-color: var(--outline);
 }
 
 .btn-lg {
@@ -183,7 +197,7 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
 @media (hover: hover) {
   .btn-lg:hover:not(:disabled) { transform: rotate(0deg) translateY(-2px); box-shadow: var(--shadow-raised-lg); }
 }
-.btn-lg:active:not(:disabled) { transform: rotate(0deg) scale(0.97) translateY(1px) !important; box-shadow: var(--shadow-in) !important; }
+.btn-lg:active:not(:disabled) { transform: rotate(0deg) translateY(3px) !important; box-shadow: var(--shadow-in) !important; }
 
 /* ---------- מסך כניסה + עורך דמות ---------- */
 
@@ -203,7 +217,7 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
 
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   #brand-title {
-    background: linear-gradient(90deg, var(--secondary), var(--accent-yellow), var(--primary));
+    background: linear-gradient(90deg, var(--accent-pink), var(--accent-orange), var(--secondary), var(--primary));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -214,17 +228,29 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
 .brand-emoji {
   display: inline-block;
   filter:
-    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.5))
-    drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))
-    drop-shadow(0 8px 18px rgba(var(--primary-rgb), 0.45));
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6))
+    drop-shadow(0 3px 5px rgba(45, 36, 64, 0.25));
 }
 
 .subtitle { color: var(--text-muted); margin: 0 0 18px; font-size: 0.95rem; font-weight: 600; }
 
 .avatar-preview {
-  width: 140px;
-  height: 140px;
+  width: 150px;
+  height: 150px;
   margin: 4px auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--accent-pink), var(--accent-orange), var(--accent-yellow), var(--accent-green), var(--accent-teal), var(--secondary), var(--primary), var(--accent-pink));
+  box-shadow: var(--shadow-raised-lg);
+  padding: 6px;
+}
+.avatar-preview > * {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -261,10 +287,9 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
 }
 
 #name-input, #join-code-input, #set-customWords, #chat-input {
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.04);
-  box-shadow: var(--shadow-in);
+  border-radius: 12px;
+  border: 2px solid var(--border-strong);
+  background: var(--surface);
   color: var(--text);
 }
 
@@ -292,7 +317,7 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
 .color-swatch.selected {
   outline: 3px solid var(--accent-yellow);
   outline-offset: 2px;
-  box-shadow: 0 0 14px rgba(var(--accent-yellow-rgb), 0.6);
+  box-shadow: 0 0 0 2px var(--outline), 0 0 14px rgba(var(--accent-yellow-rgb), 0.7);
   transform: scale(1.08);
 }
 
@@ -331,21 +356,19 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
   gap: 8px;
   flex-wrap: wrap;
   margin: 4px 0 14px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: var(--glass-bg);
-  border: 1px dashed var(--border-strong);
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--surface-tint);
+  border: 2px dashed var(--border-strong);
   font-size: 0.9rem;
 }
-#room-code-value { letter-spacing: 2px; font-size: 1.05rem; color: var(--primary); }
+#room-code-value { letter-spacing: 3px; font-size: 1.2rem; font-weight: 900; color: var(--primary); }
 
 .page-overlay {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgba(6, 7, 20, 0.75);
-  backdrop-filter: blur(10px) saturate(120%);
-  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  background: rgba(45, 36, 64, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -358,33 +381,10 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
   margin: 0 0 6px;
 }
 
-<<<<<<< HEAD
-=======
-.page-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(6, 7, 20, 0.75);
-  backdrop-filter: blur(10px) saturate(120%);
-  -webkit-backdrop-filter: blur(10px) saturate(120%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-
-.page-overlay .overlay-title {
-  font-size: 1.15rem;
-  font-weight: 900;
-  margin: 0 0 6px;
-}
-
->>>>>>> b2e8e126b9d73949698b207f81359fa094c80345
 .page-overlay .overlay-card button {
   margin-top: 14px;
 }
 
-<<<<<<< HEAD
 /* חוסם-סיבוב: מוצג/מוסתר לגמרי ב-CSS טהור (media query בלבד, בלי תלות ב-JS)
    כך שגם אם משהו בסקריפט נכשל, ההנחיה לסובב חזרה למצב עומד תמיד תעבוד. */
 #rotate-overlay { display: none; z-index: 1100; }
@@ -411,11 +411,11 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
   width: 100%;
   margin-bottom: 16px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 14px;
   text-align: right;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 55%), var(--secondary);
+  background: var(--secondary);
   color: #fff;
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: var(--outline);
   animation: install-banner-in 0.4s cubic-bezier(0.2, 0.8, 0.3, 1.15) both, install-banner-pulse 2.6s ease-in-out 0.6s infinite;
 }
 @keyframes install-banner-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
@@ -430,8 +430,6 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
 
 .ios-share-icon { font-size: 1.1rem; }
 
-=======
->>>>>>> b2e8e126b9d73949698b207f81359fa094c80345
 .toast {
   position: fixed;
   top: 14px;
@@ -440,9 +438,10 @@ input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px
   background: var(--accent-red);
   color: #fff;
   padding: 10px 20px;
-  border-radius: 10px;
+  border-radius: 12px;
   z-index: 999;
   box-shadow: var(--shadow-raised);
+  border: 2.5px solid var(--outline);
   font-weight: 700;
 }
 
@@ -469,26 +468,32 @@ body.in-game #screen-main {
   justify-content: space-between;
   gap: 10px;
   padding: 10px 14px;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-bottom: var(--glass-border);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  background: var(--surface);
+  border-bottom: 3px solid var(--outline);
   position: sticky;
   top: 0;
   z-index: 20;
 }
 
-#brand { font-weight: 900; font-size: 1.05rem; color: var(--primary); white-space: nowrap; }
+#brand { font-weight: 900; font-size: 1.15rem; color: var(--primary); white-space: nowrap; }
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  #brand {
+    background: linear-gradient(90deg, var(--accent-pink), var(--accent-orange), var(--secondary), var(--primary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
 
 #round-info { font-weight: 700; color: var(--text-muted); font-size: 0.85rem; white-space: nowrap; }
 
 #timer {
   font-weight: 900;
   font-size: 1.15rem;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 55%), var(--accent-yellow);
+  background: var(--accent-yellow);
   color: var(--ink);
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 2px solid var(--outline);
   box-shadow: var(--shadow-raised-sm);
   padding: 3px 12px;
   border-radius: 20px;
@@ -496,10 +501,17 @@ body.in-game #screen-main {
   text-align: center;
 }
 
-#timer.low { background: var(--accent-red); color: #fff; }
-#timer.paused { opacity: 0.55; }
+#timer.low { background: var(--accent-red); color: #fff; animation: timer-pulse 0.6s ease-in-out infinite; }
+#timer.paused { opacity: 0.55; animation: none; }
+@keyframes timer-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
 
 #install-btn { padding: 6px 10px; font-size: 0.8rem; }
+
+#sound-toggle-btn { padding: 6px 10px; font-size: 1.1rem; flex-shrink: 0; }
+#sound-toggle-btn.active { opacity: 0.5; }
 
 /* ---------- פריסה (מובייל-פירסט) ---------- */
 
@@ -533,12 +545,10 @@ body.in-game #board-area { flex: 1; min-height: 0; }
 #sidebar-players, #sidebar-chat { overflow-y: auto; }
 
 #sidebar-players, #sidebar-chat, #board-area {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
+  background: var(--surface);
+  border: 3px solid var(--outline);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-glass);
+  box-shadow: var(--shadow-card);
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -563,25 +573,25 @@ body.in-game #board-area { flex: 1; min-height: 0; }
   align-items: center;
   gap: 1px;
   padding: 5px 4px;
-  border-radius: 10px;
-  background: var(--bg-panel-solid);
-  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-tint);
+  border: 2px solid var(--border-strong);
   box-shadow: var(--shadow-raised-sm);
   min-width: 56px;
   flex-shrink: 0;
   text-align: center;
 }
 
-.player-row.me { background: rgba(var(--secondary-rgb), 0.2); border-color: var(--secondary); }
-.player-row.drawing { border-color: var(--accent-yellow); background: rgba(var(--accent-yellow-rgb), 0.18); }
-.player-row.top-rank { border-color: var(--accent-yellow); box-shadow: var(--shadow-raised-sm), 0 0 14px rgba(var(--accent-yellow-rgb), 0.5); }
+.player-row.me { background: rgba(var(--secondary-rgb), 0.16); border-color: var(--secondary); }
+.player-row.drawing { border-color: var(--accent-orange); background: rgba(var(--accent-orange-rgb), 0.16); }
+.player-row.top-rank { border-color: var(--accent-yellow); box-shadow: var(--shadow-raised-sm), 0 0 14px rgba(var(--accent-yellow-rgb), 0.6); }
 .player-row.guessed { opacity: 0.6; }
 
-.player-avatar { display: flex; border-radius: 50%; box-shadow: 0 0 0 2px var(--bg-panel-solid), 0 0 0 3px var(--border-strong); }
+.player-avatar { display: flex; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--border-strong); }
 .player-avatar svg { display: block; border-radius: 50%; }
-.player-row.top-rank .player-avatar { box-shadow: 0 0 0 2px var(--bg-panel-solid), 0 0 0 3px var(--accent-yellow), 0 0 8px rgba(var(--accent-yellow-rgb), 0.6); }
+.player-row.top-rank .player-avatar { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent-yellow), 0 0 8px rgba(var(--accent-yellow-rgb), 0.7); }
 
-.player-name { max-width: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: 0.68rem; }
+.player-name { max-width: 66px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: 0.72rem; }
 
 .player-score { font-weight: 800; color: var(--primary); font-size: 0.68rem; }
 
@@ -591,9 +601,10 @@ body.in-game #board-area { flex: 1; min-height: 0; }
   background: none;
   border: none;
   color: var(--danger);
-  font-size: 0.8rem;
-  opacity: 0.6;
+  font-size: 0.95rem;
+  opacity: 0.7;
   box-shadow: none;
+  padding: 4px;
 }
 .kick-btn:hover { opacity: 1; }
 .kick-btn:active { transform: none; }
@@ -613,7 +624,7 @@ body.in-game #board-area { flex: 1; min-height: 0; }
 }
 
 #lobby-panel .lobby-scroll {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--border);
   padding-bottom: 14px;
   margin-bottom: 12px;
 }
@@ -623,6 +634,14 @@ body.in-game #board-area { flex: 1; min-height: 0; }
 #lobby-panel h2 { margin-top: 0; }
 
 .hint { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
+
+.settings-section-title {
+  margin: 18px 0 6px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+.settings-section-title:first-of-type { margin-top: 4px; }
 
 .settings-grid {
   display: grid;
@@ -652,39 +671,40 @@ body.in-game #board-area { flex: 1; min-height: 0; }
   font-weight: 500;
 }
 
-/* --- מחוונים (sliders) - טראק מאט סגלגל, ידית מוברשת עם טבעת זוהרת --- */
+/* --- מחוונים (sliders) - טראק צבעוני עגול, ידית עם קו מתאר בולט --- */
 
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 8px;
+  height: 10px;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--secondary-dark), var(--secondary));
   outline: none;
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #eef2ff, #b9c0d9 60%, #7d859e);
-  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.45), var(--shadow-raised-sm);
+  background: #ffffff;
+  border: 3px solid var(--outline);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.35), var(--shadow-raised-sm);
   cursor: pointer;
   margin-top: -7px;
 }
 input[type="range"]::-moz-range-track {
-  height: 8px;
+  height: 10px;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--secondary-dark), var(--secondary));
 }
 input[type="range"]::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
-  border: none;
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--outline);
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #eef2ff, #b9c0d9 60%, #7d859e);
-  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.45), var(--shadow-raised-sm);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.35), var(--shadow-raised-sm);
   cursor: pointer;
 }
 
@@ -709,7 +729,7 @@ input[type="range"]::-moz-range-thumb {
   max-width: 90%;
   object-fit: contain;
   border-radius: 10px;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border-strong);
   background: #fff;
   box-shadow: var(--shadow-raised-sm);
   cursor: pointer;
@@ -738,16 +758,16 @@ input[type="range"]::-moz-range-thumb {
   width: 100%;
   height: min(52vh, 60vw); /* נפילה בטוחה לפני שה-JS ירוץ בפעם הראשונה */
   min-height: 0;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  border: 2px solid rgba(var(--primary-rgb), 0.55);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset, 0 0 24px rgba(var(--primary-rgb), 0.35), var(--shadow-glass);
-  background: #ffffff; /* המשטח הלבן נשאר ניטרלי בכוונה - רק המסגרת מקבלת זוהר/זכוכית, כדי שצבעי הציור (כולל לבן ב-DRAW_COLORS) ישמרו על ניגודיות */
+  border: 4px solid var(--outline);
+  box-shadow: var(--shadow-card);
+  background: #ffffff; /* המשטח הלבן נשאר ניטרלי בכוונה, כדי שצבעי הציור (כולל לבן ב-DRAW_COLORS) ישמרו על ניגודיות */
   /* מסך נייד שמפעיל מקלדת (פוקוס בתיבת הצ'אט) משנה את גובה ה-viewport הנראה,
      מה שגורם ל-ResizeObserver ב-canvas.js לחשב מידות חדשות לעטיפה הזו - בלי
-     transition, השינוי הפתאומי בגודל ה-box-shadow נראה כמו "הבהוב"/"נדלק-כבה"
-     של הזוהר סביב הקנבס. עם transition זה נראה כמו שינוי גודל חלק ומכוון. */
-  transition: width 0.18s ease, height 0.18s ease, box-shadow 0.18s ease;
+     transition, השינוי הפתאומי בגודל נראה כמו "קפיצה". עם transition זה נראה
+     כמו שינוי גודל חלק ומכוון. */
+  transition: width 0.18s ease, height 0.18s ease;
 }
 
 #draw-canvas {
@@ -761,9 +781,7 @@ input[type="range"]::-moz-range-thumb {
 .overlay {
   position: absolute;
   inset: 0;
-  background: rgba(6, 7, 20, 0.6);
-  backdrop-filter: blur(10px) saturate(120%);
-  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  background: rgba(45, 36, 64, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -771,11 +789,9 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .overlay-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
-  box-shadow: var(--shadow-glass);
+  background: var(--surface);
+  border: 3px solid var(--outline);
+  box-shadow: var(--shadow-card);
   padding: 22px;
   border-radius: var(--radius-lg);
   text-align: center;
@@ -788,7 +804,12 @@ input[type="range"]::-moz-range-thumb {
   overflow-x: hidden;
 }
 
-#reveal-text { flex-shrink: 0; margin: 0 0 4px; }
+/* אוברליי הבחירה (choosing) - דחיפות: מסגרת כתומה-צהובה תוססת סביב הכרטיס. */
+#choosing-overlay .overlay-card { border-color: var(--accent-orange); box-shadow: var(--shadow-card), 0 0 0 5px rgba(var(--accent-orange-rgb), 0.25); }
+/* אוברליי החשיפה (reveal) - חגיגי: מסגרת ירוקה. */
+#reveal-overlay .overlay-card { border-color: var(--accent-green); box-shadow: var(--shadow-card), 0 0 0 5px rgba(var(--accent-green-rgb), 0.25); }
+
+#reveal-text { flex-shrink: 0; margin: 0 0 4px; font-size: 1.1rem; }
 
 #reveal-scores {
   list-style: none;
@@ -808,14 +829,15 @@ input[type="range"]::-moz-range-thumb {
   align-items: center;
   gap: 8px;
   padding: 5px 8px;
-  border-radius: 10px;
-  background: var(--bg-panel-solid);
-  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-tint);
+  border: 2px solid var(--border);
   margin-bottom: 5px;
   max-width: 100%;
 }
 
 .reveal-score-row.me { border-color: var(--secondary); }
+.reveal-score-row.mvp { border-color: var(--accent-yellow); background: rgba(var(--accent-yellow-rgb), 0.16); }
 
 .reveal-score-name {
   flex: 1;
@@ -852,17 +874,17 @@ input[type="range"]::-moz-range-thumb {
 
 .word-choice-btn {
   padding: 12px 20px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 50%), var(--accent-yellow);
+  border-radius: 12px;
+  background: var(--accent-yellow);
   color: var(--ink);
-  border-color: rgba(0, 0, 0, 0.15);
-  box-shadow: var(--shadow-raised), 0 0 16px rgba(var(--accent-yellow-rgb), 0.25);
+  border-color: var(--outline);
+  box-shadow: var(--shadow-raised), 0 0 16px rgba(var(--accent-yellow-rgb), 0.35);
   font-weight: 800;
   font-size: 1.05rem;
 }
 
 .word-choice-btn.has-image { padding: 6px; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.word-choice-img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+.word-choice-img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
 @media (max-width: 420px) { .word-choice-btn.has-image { width: 76px; height: 76px; } }
 
 .speak-btn { font-size: 1rem; padding: 6px 10px; }
@@ -881,15 +903,15 @@ input[type="range"]::-moz-range-thumb {
   flex-wrap: nowrap;
   overflow-x: auto;
   padding: 8px 10px;
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
+  background: var(--surface-tint);
+  border: 2.5px solid var(--outline);
   border-radius: var(--radius);
   box-shadow: var(--shadow-raised);
 }
 
 .tool-btn {
-  background: var(--bg-panel-solid);
-  border-radius: 10px;
+  background: var(--surface);
+  border-radius: 12px;
   font-size: 1.25rem;
   padding: 8px 14px;
   flex-shrink: 0;
@@ -897,10 +919,12 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .tool-btn.active {
-  background: rgba(var(--accent-yellow-rgb), 0.16);
+  background: rgba(var(--accent-yellow-rgb), 0.25);
   box-shadow: 0 0 0 2px var(--accent-yellow), 0 0 14px rgba(var(--accent-yellow-rgb), 0.55), var(--shadow-in);
   transform: none;
 }
+
+#tool-clear { color: var(--accent-red); border-color: var(--accent-red); }
 
 #mic-btn.active { background: var(--accent-red); color: #fff; }
 
@@ -911,8 +935,8 @@ input[type="range"]::-moz-range-thumb {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.4);
+  border: 2px solid var(--outline);
+  box-shadow: 0 0 0 2px rgba(45, 36, 64, 0.2);
 }
 
 .size-dot {
@@ -924,20 +948,18 @@ input[type="range"]::-moz-range-thumb {
 }
 
 #size-btn-dot {
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.4);
+  border: 2px solid var(--outline);
+  box-shadow: 0 0 0 2px rgba(45, 36, 64, 0.2);
 }
 
 /* מיקום ה-popover (top/left) מחושב ומוגדר ב-JS כ-position:fixed, כדי שלעולם
    לא ייחתך על ידי אב עם overflow:auto/hidden (למשל סרגל הכלים ב-landscape). */
 .popover {
   position: fixed;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
-  border-radius: 12px;
-  box-shadow: var(--shadow-glass);
+  background: var(--surface);
+  border: 3px solid var(--outline);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
   padding: 10px;
   z-index: 200;
   display: grid;
@@ -953,14 +975,14 @@ input[type="range"]::-moz-range-thumb {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--bg-panel-solid);
+  background: var(--surface-tint);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border-strong);
 }
 
-.size-option.active { border-color: var(--accent-yellow); background: rgba(var(--accent-yellow-rgb), 0.15); box-shadow: 0 0 10px rgba(var(--accent-yellow-rgb), 0.5); }
+.size-option.active { border-color: var(--accent-yellow); background: rgba(var(--accent-yellow-rgb), 0.2); box-shadow: 0 0 10px rgba(var(--accent-yellow-rgb), 0.5); }
 
 #color-popover .color-swatch { width: 32px; height: 32px; }
 
@@ -976,11 +998,11 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .reaction-btn {
-  background: var(--bg-panel-solid);
+  background: var(--surface-tint);
   border-radius: 50%;
-  width: 42px;
-  height: 42px;
-  font-size: 1.2rem;
+  width: 46px;
+  height: 46px;
+  font-size: 1.25rem;
 }
 
 #reactions-layer {
@@ -1020,27 +1042,59 @@ input[type="range"]::-moz-range-thumb {
   100% { transform: translateY(105vh) rotate(560deg); opacity: 0.4; }
 }
 
-/* --- סיום --- */
+/* --- סיום / פודיום --- */
 
 #end-panel { align-items: center; justify-content: center; text-align: center; }
 
-#podium { list-style: none; padding: 0; width: min(400px, 90%); margin: 0 auto; }
-
-#podium li {
+#podium {
+  list-style: none;
+  padding: 0;
+  width: min(440px, 92vw);
+  margin: 0 auto;
   display: flex;
-  justify-content: space-between;
-  padding: 10px 16px;
-  border-radius: 10px;
-  background: var(--bg-panel-solid);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-raised-sm);
-  margin-bottom: 8px;
-  font-weight: 800;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
 }
 
-#podium li:nth-child(1) { background: linear-gradient(90deg, rgba(246, 196, 83, 0.35), transparent), var(--bg-panel-solid); border-color: var(--accent-yellow); }
-#podium li:nth-child(2) { background: linear-gradient(90deg, rgba(200, 205, 224, 0.28), transparent), var(--bg-panel-solid); border-color: var(--border-strong); }
-#podium li:nth-child(3) { background: linear-gradient(90deg, rgba(205, 127, 50, 0.3), transparent), var(--bg-panel-solid); border-color: rgba(205, 127, 50, 0.6); }
+.podium-place {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px 12px;
+  border-radius: 14px 14px 8px 8px;
+  background: var(--surface-tint);
+  border: 3px solid var(--outline);
+  font-weight: 800;
+}
+.podium-place .player-avatar { width: 44px; height: 44px; }
+.podium-place .podium-name { font-size: 0.85rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.podium-place .podium-score { font-size: 0.8rem; color: var(--text-muted); }
+.podium-place .podium-medal { font-size: 1.6rem; }
+
+.podium-place.place-1 { order: 2; padding-top: 6px; background: linear-gradient(180deg, rgba(var(--accent-yellow-rgb), 0.35), var(--surface-tint)); border-color: var(--accent-yellow); box-shadow: 0 0 20px rgba(var(--accent-yellow-rgb), 0.4); }
+.podium-place.place-1 .player-avatar { width: 58px; height: 58px; }
+.podium-place.place-2 { order: 1; }
+.podium-place.place-3 { order: 3; }
+
+/* שאר הדירוגים (מ-4 ומטה, אם יש) - שורה רגילה מתחת לפודיום */
+#podium-rest { list-style: none; padding: 0; width: min(440px, 92vw); margin: 10px auto 0; }
+#podium-rest li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--surface-tint);
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow-raised-sm);
+  margin-bottom: 6px;
+  font-weight: 700;
+}
 
 /* --- צ'אט --- */
 
@@ -1056,7 +1110,9 @@ input[type="range"]::-moz-range-thumb {
   font-size: 0.88rem;
 }
 
-.chat-msg { line-height: 1.4; word-break: break-word; }
+.chat-msg { display: flex; align-items: flex-start; gap: 6px; line-height: 1.4; word-break: break-word; }
+.chat-msg .chat-msg-avatar { flex-shrink: 0; margin-top: 1px; }
+.chat-msg .chat-msg-avatar svg { display: block; border-radius: 50%; }
 .chat-msg .who { font-weight: 800; }
 .chat-msg.system { color: var(--text-muted); font-style: italic; }
 .chat-msg.correct { color: var(--accent-green); font-weight: 800; }
@@ -1066,17 +1122,15 @@ input[type="range"]::-moz-range-thumb {
   align-items: center;
   gap: 4px;
   margin-top: 8px;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
+  background: var(--surface);
+  border: 2.5px solid var(--outline);
   border-radius: 999px;
   padding: 4px 4px 4px 14px;
-  box-shadow: var(--shadow-glass);
+  box-shadow: var(--shadow-raised-sm);
   transition: border-color 0.15s ease;
 }
 
-#chat-form:focus-within { border-color: var(--primary); }
+#chat-form:focus-within { border-color: var(--secondary); }
 
 #chat-input {
   flex: 1;
@@ -1090,11 +1144,79 @@ input[type="range"]::-moz-range-thumb {
 #chat-form #mic-btn { border-radius: 50%; width: 38px; height: 38px; padding: 0; flex-shrink: 0; }
 #chat-form button[type="submit"] { border-radius: 999px; flex-shrink: 0; }
 
+/* --- תגי הישג / רצף ניצחונות / MVP --- */
+
+.streak-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--accent-orange);
+  color: #fff;
+  border: 2px solid var(--outline);
+  font-weight: 800;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+/* --- כרטיס "הסטטיסטיקות שלי" (מסך כניסה) --- */
+
+.stats-card {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--surface-tint);
+  border: 2px solid var(--border-strong);
+}
+.stats-card .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 52px;
+}
+.stats-card .stat-value { font-weight: 900; font-size: 1.1rem; color: var(--primary); }
+.stats-card .stat-label { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; }
+.stats-badges { flex-basis: 100%; text-align: center; font-size: 0.85rem; font-weight: 700; }
+
+.end-stats-callout {
+  font-weight: 900;
+  font-size: 1rem;
+  color: #0b3d24;
+  background: rgba(var(--accent-green-rgb), 0.25);
+  border: 2px solid var(--accent-green);
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin: 0 0 12px;
+}
+
+/* --- פופאובר אישור מותאם (למשל "לנקות הכל?") - במקום confirm() דפדפני --- */
+
+.confirm-popover {
+  position: fixed;
+  z-index: 300;
+  background: var(--surface);
+  border: 3px solid var(--accent-red);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+  padding: 14px;
+  text-align: center;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 24px));
+}
+.confirm-popover p { margin: 0 0 10px; font-weight: 700; font-size: 0.92rem; }
+.confirm-popover-actions { display: flex; gap: 8px; justify-content: center; }
+.confirm-popover-actions .btn { padding: 8px 16px; font-size: 0.9rem; }
+
 /* ---------- רספונסיביות (מובייל-פירסט) ---------- */
 
 @media (min-width: 600px) {
   #player-list { flex-direction: column; overflow-x: visible; }
-  .player-row { flex-direction: row; min-width: 0; text-align: right; border-radius: 8px; }
+  .player-row { flex-direction: row; min-width: 0; text-align: right; border-radius: 10px; }
   .player-name { max-width: none; font-size: 0.9rem; }
   .player-score { font-size: 0.85rem; }
   #sidebar-chat { max-height: none; }
@@ -1183,12 +1305,13 @@ input[type="range"]::-moz-range-thumb {
     gap: 4px;
     text-align: right;
     border-radius: 20px;
-    border-width: 1px;
+    border-width: 2px;
   }
-  .player-avatar svg { width: 20px; height: 20px; display: block; }
-  .player-name { max-width: 64px; font-size: 0.72rem; }
+  .player-avatar svg { width: 26px; height: 26px; display: block; }
+  .player-name { max-width: 72px; font-size: 0.76rem; }
   .player-score { font-size: 0.72rem; }
   .player-badge { font-size: 0.72rem; }
+  .streak-chip { font-size: 0.68rem; padding: 1px 7px; }
   .kick-btn { display: none; }
 
   /* --- צ'אט: פס קבוע קטן, לא נגלל/מתקפל --- */
@@ -1216,8 +1339,12 @@ input[type="range"]::-moz-range-thumb {
     flex-shrink: 0;
   }
   body.in-game #install-btn { display: none !important; }
+  /* הלוגו יורד בזמן משחק בפועל בטלפון צר - כדי לפנות מקום לסרגל ה-טופ-בר
+     (מידע-סבב + טיימר + כפתור השתקה) בלי גלישה/שבירת שורה, גם ב-320px. */
+  body.in-game #brand { display: none; }
   body.in-game #round-info { font-size: 0.78rem; }
   body.in-game #timer { font-size: 0.9rem; padding: 2px 12px; }
+  body.in-game #sound-toggle-btn { padding: 4px 8px; font-size: 1rem; }
 
   body.in-game #board-area {
     padding: 0;
@@ -1238,7 +1365,7 @@ input[type="range"]::-moz-range-thumb {
   body.in-game .word-display-img { height: min(64px, 10vh); }
 
   body.in-game #canvas-stage { min-height: 0; }
-  body.in-game #canvas-wrap { border-width: 1px; }
+  body.in-game #canvas-wrap { border-width: 3px; }
 
   body.in-game #toolbar {
     flex-shrink: 0;
@@ -1267,8 +1394,8 @@ input[type="range"]::-moz-range-thumb {
     padding-bottom: 2px;
   }
   body.in-game .reaction-btn {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     font-size: 1rem;
     flex-shrink: 0;
   }

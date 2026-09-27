@@ -31,8 +31,8 @@
     return pts.join(" ");
   }
 
-  function heartShape(cx, cy, s) {
-    return `<path d="M${cx},${cy + s * 0.8} C${cx - s * 1.4},${cy - s * 0.4} ${cx - s * 0.6},${cy - s * 1.6} ${cx},${cy - s * 0.4} C${cx + s * 0.6},${cy - s * 1.6} ${cx + s * 1.4},${cy - s * 0.4} ${cx},${cy + s * 0.8} Z" fill="#ff4d6d" stroke="${INK}" stroke-width="1.2"/>`;
+  function heartShape(cx, cy, s, fill = "#ff4d6d") {
+    return `<path d="M${cx},${cy + s * 0.8} C${cx - s * 1.4},${cy - s * 0.4} ${cx - s * 0.6},${cy - s * 1.6} ${cx},${cy - s * 0.4} C${cx + s * 0.6},${cy - s * 1.6} ${cx + s * 1.4},${cy - s * 0.4} ${cx},${cy + s * 0.8} Z" fill="${fill}" stroke="${INK}" stroke-width="1.2"/>`;
   }
 
   // כל וריאנט הוא פונקציה שמחזירה markup פנימי של SVG (בלי תג <svg> עצמו)
@@ -147,20 +147,69 @@
     `,
   ];
 
+  // תבניות עיטור על גוף הדמות (מעבר לצבע בלבד) - כל וריאנט מחזיר markup
+  // פנימי שמצויר בתוך clip-path של צורת הגוף (ראו avatarSVG), כך שהתבנית
+  // תמיד נשארת בגבולות הבלוב ולא "בורחת" מעליו.
+  const PATTERN_VARIANTS = [
+    // 0 - אחיד (בלי תבנית)
+    () => "",
+    // 1 - פסים אלכסוניים
+    () => {
+      let s = "";
+      for (let i = -2; i < 8; i++) {
+        const x = i * 14;
+        s += `<line x1="${x}" y1="100" x2="${x + 30}" y2="0" stroke="rgba(255,255,255,0.4)" stroke-width="7"/>`;
+      }
+      return s;
+    },
+    // 2 - נקודות
+    () => {
+      let s = "";
+      [22, 40, 58, 74].forEach((y, ri) => {
+        for (let x = 20 + (ri % 2) * 8; x < 90; x += 16) {
+          s += `<circle cx="${x}" cy="${y}" r="4" fill="rgba(255,255,255,0.45)"/>`;
+        }
+      });
+      return s;
+    },
+    // 3 - כוכבים
+    () => [[28, 24], [55, 20], [75, 32], [30, 56], [70, 60], [50, 76]]
+      .map(([x, y]) => `<polygon points="${starPoints(x, y, 6, 2.6)}" fill="rgba(255,255,255,0.5)"/>`)
+      .join(""),
+    // 4 - לבבות
+    () => [[30, 28], [68, 26], [50, 50], [26, 62], [72, 64]]
+      .map(([x, y]) => heartShape(x, y, 4.5, "rgba(255,255,255,0.55)"))
+      .join(""),
+  ];
+
   function clampIndex(n, count) {
     n = Math.round(Number(n));
     if (!Number.isFinite(n)) return 0;
     return ((n % count) + count) % count;
   }
 
+  // מונה גלובלי ל-id ייחודי של clip-path בכל קריאה - כמה אווטארים (רשימת
+  // שחקנים, צ'אט, פודיום) מוצגים בו-זמנית באותו עמוד, ו-id כפול של <clipPath>
+  // בין כמה <svg> יכול "לגנוב" רפרנס בין הצורות בדפדפנים מסוימים.
+  let clipCounter = 0;
+
   function avatarSVG(config, size) {
     config = config || {};
     const color = COLORS.includes(config.color) ? config.color : COLORS[0];
     const eyes = clampIndex(config.eyes, EYE_VARIANTS.length);
     const mouth = clampIndex(config.mouth, MOUTH_VARIANTS.length);
+    const pattern = clampIndex(config.pattern, PATTERN_VARIANTS.length);
+    clipCounter++;
+    const clipId = `tvn-body-clip-${clipCounter}`;
     return (
       `<svg viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="דמות שחקן">` +
+      `<defs><clipPath id="${clipId}">` +
+      `<rect x="16" y="10" width="68" height="66" rx="30" ry="30"/>` +
+      `<ellipse cx="35" cy="87" rx="11" ry="8"/>` +
+      `<ellipse cx="65" cy="87" rx="11" ry="8"/>` +
+      `</clipPath></defs>` +
       bodySVG(color) +
+      `<g clip-path="url(#${clipId})">${PATTERN_VARIANTS[pattern]()}</g>` +
       `<g>${EYE_VARIANTS[eyes]()}</g>` +
       `<g>${MOUTH_VARIANTS[mouth]()}</g>` +
       `</svg>`
@@ -176,6 +225,7 @@
     COLORS,
     EYES_COUNT: EYE_VARIANTS.length,
     MOUTH_COUNT: MOUTH_VARIANTS.length,
+    PATTERN_COUNT: PATTERN_VARIANTS.length,
     clampIndex,
     avatarSVG,
     renderAvatar,

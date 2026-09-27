@@ -38,9 +38,10 @@ const AVATAR_COLORS = [
   "#e74c3c", "#e67e22", "#f1c40f", "#2ecc71", "#1abc9c",
   "#3498db", "#9b59b6", "#e84393", "#795548", "#34495e",
 ];
-// חייב להישאר זהה לאורך EYE_VARIANTS/MOUTH_VARIANTS ב-public/js/avatar.js
+// חייב להישאר זהה לאורך EYE_VARIANTS/MOUTH_VARIANTS/PATTERN_VARIANTS ב-public/js/avatar.js
 const EYES_COUNT = 12;
 const MOUTH_COUNT = 12;
+const PATTERN_COUNT = 5;
 
 function buildAvatar(avatar) {
   avatar = avatar && typeof avatar === "object" ? avatar : {};
@@ -49,7 +50,8 @@ function buildAvatar(avatar) {
     : AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
   const eyes = clamp(avatar.eyes, 0, EYES_COUNT - 1);
   const mouth = clamp(avatar.mouth, 0, MOUTH_COUNT - 1);
-  return { color, eyes, mouth };
+  const pattern = clamp(avatar.pattern, 0, PATTERN_COUNT - 1);
+  return { color, eyes, mouth, pattern };
 }
 
 async function main() {
@@ -104,6 +106,16 @@ async function main() {
     socket.on("create-room", ({ name, avatar, token, canRead }) => {
       const room = roomManager.createPrivateRoom();
       enterRoom(room, name, avatar, token, canRead);
+    });
+
+    // הסטטיסטיקות הן לפי הטוקן הקבוע של המכשיר (לא לפי חדר) - אפשר לבקש
+    // אותן בכל שלב, גם לפני הצטרפות לחדר, כי הסוקט מחובר כבר מטעינת העמוד.
+    socket.on("get-stats", async ({ token } = {}) => {
+      try {
+        socket.emit("stats", await db.getPlayerStats(token));
+      } catch (err) {
+        console.error("[stats] שגיאה בשליפת סטטיסטיקות:", err.message);
+      }
     });
 
     socket.on("rejoin", ({ token, roomCode }) => {
