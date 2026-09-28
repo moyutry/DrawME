@@ -83,7 +83,10 @@ class DrawingCanvas {
   }
 
   setStrokes(strokes) {
-    this.strokes = (strokes || []).map((s) => ({ ...s, points: (s.points || []).map((p) => ({ ...p })) }));
+    // Object.assign ולא spread-syntax ({...s}) בכוונה - תואם דפדפנים ישנים יותר.
+    this.strokes = (strokes || []).map((s) => Object.assign({}, s, {
+      points: (s.points || []).map((p) => Object.assign({}, p)),
+    }));
     this._remoteBuffer = null;
     this._lastRemotePoint = null;
     this.redrawAll();

@@ -11,15 +11,17 @@
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
     "icons": "node scripts/generate-icons.js",
-    "fetch-word-images": "node scripts/fetch-word-images.js"
+    "fetch-word-images": "node scripts/fetch-word-images.js",
+    "check-compat": "node scripts/check-old-browser-syntax.js"
   },
   "dependencies": {
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "socket.io": "^4.7.5",
     "mongodb": "^6.7.0",
-    "dotenv": "^16.4.5"
+    "socket.io": "^4.7.5"
   },
   "devDependencies": {
+    "acorn": "^8.18.0",
     "nodemon": "^3.1.4"
   }
 }

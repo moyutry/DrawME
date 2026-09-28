@@ -114,7 +114,7 @@
           count++;
         }
         img.classList.toggle("dark-bg", count > 0 && total / count > 210);
-      } catch { /* לא קריטי - נשאר על רקע לבן ברירת המחדל */ }
+      } catch (e) { /* לא קריטי - נשאר על רקע לבן ברירת המחדל */ }
     });
   }
 
@@ -449,7 +449,11 @@
   // פופאובר אישור מעוצב (במקום confirm() דפדפני שלא תואם את שאר העיצוב) -
   // ממוקם ב-position:fixed ליד הכפתור שהפעיל אותו, כמו popover הצבע/העובי.
   function showConfirmPopover(triggerEl, message, onConfirm) {
-    document.getElementById("confirm-popover")?.remove();
+    // בכוונה בלי "?." (optional chaining, ES2020) - תחביר לא נתמך שובר את
+    // הפענוח (parsing) של כל הקובץ במנועי JS ישנים (ולא רק את הפיצ'ר הזה),
+    // מה שמסביר מכשירים שבהם האפליקציה לא עלתה בכלל למרות חיבור תקין.
+    const existingPopover = document.getElementById("confirm-popover");
+    if (existingPopover) existingPopover.remove();
     closePopovers();
     const pop = document.createElement("div");
     pop.id = "confirm-popover";
@@ -519,23 +523,22 @@
   el("start-btn").addEventListener("click", () => socket.emit("start-game"));
   el("play-again-btn").addEventListener("click", () => socket.emit("back-to-lobby"));
 
+  // בכוונה בלי async/await (ES2017) - שרשרת .then()/.catch() רגילה, כדי
+  // להישאר תואם לדפדפנים ישנים יותר.
   if (!navigator.share) el("share-code-btn").classList.add("hidden");
-  el("share-code-btn").addEventListener("click", async () => {
+  el("share-code-btn").addEventListener("click", () => {
     const code = el("room-code-value").textContent;
     if (!code || !navigator.share) return;
-    try {
-      await navigator.share({ title: "בואו לשחק!", text: `הצטרפ/י אליי למשחק ציור ונחש עם הקוד: ${code}`, url: location.href });
-    } catch { /* המשתמש/ת ביטל/ה את השיתוף - לא קורה כלום */ }
+    navigator.share({ title: "בואו לשחק!", text: `הצטרפ/י אליי למשחק ציור ונחש עם הקוד: ${code}`, url: location.href })
+      .catch(() => {}); // המשתמש/ת ביטל/ה את השיתוף - לא קורה כלום
   });
-  el("copy-code-btn").addEventListener("click", async () => {
+  el("copy-code-btn").addEventListener("click", () => {
     const code = el("room-code-value").textContent;
     if (!code) return;
-    try {
-      await navigator.clipboard.writeText(code);
-      showToast("הקוד הועתק!");
-    } catch {
-      showToast("ההעתקה נכשלה");
-    }
+    navigator.clipboard.writeText(code).then(
+      () => showToast("הקוד הועתק!"),
+      () => showToast("ההעתקה נכשלה")
+    );
   });
 
   function syncSettingsForm(settings) {
@@ -1022,12 +1025,12 @@
       orientationLocked = true;
       try {
         screen.orientation && screen.orientation.lock && screen.orientation.lock("portrait").catch(() => {});
-      } catch { /* לא נתמך - לא קורה כלום, ה-CSS overlay עדיין עובד */ }
+      } catch (e) { /* לא נתמך - לא קורה כלום, ה-CSS overlay עדיין עובד */ }
     } else if (!inGame && orientationLocked) {
       orientationLocked = false;
       try {
         screen.orientation && screen.orientation.unlock && screen.orientation.unlock();
-      } catch { /* לא נתמך - לא קורה כלום */ }
+      } catch (e) { /* לא נתמך - לא קורה כלום */ }
     }
   }
 
@@ -1080,7 +1083,7 @@
       micBtn.classList.add("active");
       try {
         recognition.start();
-      } catch {
+      } catch (e) {
         listening = false;
         micBtn.classList.remove("active");
       }
@@ -1126,7 +1129,7 @@
   }
 
   function vibrate(pattern) {
-    try { navigator.vibrate && navigator.vibrate(pattern); } catch { /* לא נתמך - לא קורה כלום */ }
+    try { navigator.vibrate && navigator.vibrate(pattern); } catch (e) { /* לא נתמך - לא קורה כלום */ }
   }
 
   function playCorrectGuessSound() { playTone([523.25, 659.25, 783.99]); vibrate(40); } // דו-מי-סול עולה
@@ -1167,7 +1170,7 @@
   }
 
   function safeParse(str) {
-    try { return JSON.parse(str); } catch { return null; }
+    try { return JSON.parse(str); } catch (e) { return null; }
   }
 
   // ---------- PWA: התקנה ----------
@@ -1202,12 +1205,13 @@
     updateInstallUI();
   });
 
-  async function triggerInstall() {
+  function triggerInstall() {
     if (deferredInstallPrompt) {
       deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null;
-      updateInstallUI();
+      deferredInstallPrompt.userChoice.then(() => {
+        deferredInstallPrompt = null;
+        updateInstallUI();
+      });
     } else if (isIosDevice) {
       el("ios-install-modal").classList.remove("hidden");
     } else {
